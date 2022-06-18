@@ -1,0 +1,12 @@
+
+*.pyc
+/build/
+/.idea/
+/venv/
+/test.py
+/pygame-joystick.py
+/main - Copy.spec
+/main.bak.py
+/CamBot6D.spec
+/dist/
+/templates/
