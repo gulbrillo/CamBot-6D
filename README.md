@@ -37,6 +37,8 @@ Initial pre-release.
 
 We are in early testing. Alpha builds for Windows are available here:  
 
+https://github.com/gulbrillo/CamBot-6D/releases
+
 # Run
 
 Requires Python 3.10 or higher.
