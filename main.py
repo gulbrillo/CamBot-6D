@@ -39,6 +39,7 @@ if __name__ != "__mp_main__":
     import win32api
     import win32con
     import win32gui
+    import win32com.client
     try:
         import pyi_splash
     except:
@@ -81,6 +82,12 @@ opentrack_ip = ''
 opentrack_port = ''
 #
 
+path_time = 3.0
+ease_selection = 0
+point_time = 1.0
+
+#
+
 joystick_value = None
 joystickNames = []
 joystickIds = []
@@ -95,8 +102,6 @@ ttsQ = ''
 all_processes = []
 
 q = Queue()
-camera_path_loop = False
-camera_path_thread = ''
 
 ###
 
@@ -214,6 +219,10 @@ if __name__ != "__mp_main__":
             global mqtt_user
             global mqtt_pass
 
+            global path_time
+            global ease_selection
+            global point_time
+
             global opentrack_ip
             global opentrack_port
             global voice_enable
@@ -234,8 +243,6 @@ if __name__ != "__mp_main__":
             #send_to_opentrack = Thread(target=self.send_to_opentrack_thread, args=("Thread",))
             #send_to_opentrack.start()
 
-            global camera_path_thread
-            camera_path_thread = Thread(target=do_camera_path, args=("Thread",))
 
             QMainWindow.__init__(self)
             self.ui = Ui_MainWindow()
@@ -402,7 +409,7 @@ if __name__ != "__mp_main__":
             ## ==> END ##
 
             ## ==> DELETE ALL WAYPOINTS
-            #self.ui.pushButton_delete_all.clicked.connect()
+            self.ui.pushButton_delete_all.clicked.connect(lambda: F.deleteAll(q, config))
 
             ## ==> play sample voice line
             self.ui.voiceTestButton.clicked.connect(lambda: q.put('This is a test of the CamBot 6D audio feedback system.'))
@@ -427,8 +434,24 @@ if __name__ != "__mp_main__":
 
             self.ui.MQTTTestButton.clicked.connect(self.start_mqtt)
 
+            self.ui.pathtimeEdit.setValue(path_time)
+            self.ui.pathtimeEdit.valueChanged.connect(self.path_time_changed)
+
+            self.ui.pointtimeEdit.setValue(point_time)
+            self.ui.pointtimeEdit.valueChanged.connect(self.point_time_changed)
+
+
+            self.ui.pushButton_forward.clicked.connect(lambda: self.goForward(q, config))
+            self.ui.pushButton_backward.clicked.connect(lambda: F.pathBackward(q, config))
+
+
+
+
             ## ==> ADD NEW WAYPOINT
-            self.ui.pushButton_add_waypoint.clicked.connect(lambda: F.newWaypoint(q))
+            self.ui.pushButton_add_waypoint.clicked.connect(lambda: F.newWaypoint(q, config))
+
+            ## ==> GO HOME
+            self.ui.pushButton_home.clicked.connect(lambda: F.goHome(q, config))
 
             ## ==> QTableWidget RARAMETERS
             ########################################################################
@@ -444,6 +467,15 @@ if __name__ != "__mp_main__":
             ############################## ---/--/--- ##############################
 
             self.show()
+
+        def showForeground(self):
+            self.F.showForeground()
+
+        def goForward(self, q, config):
+            self.F.pathForward(q, config)
+
+        def goBackward(self, q, config):
+            self.F.pathBackward(q, config)
 
         def opentrack_ip_changed(self, text):
             global opentrack_ip
@@ -481,6 +513,19 @@ if __name__ != "__mp_main__":
             config.set('mqtt', 'pass', str(text))
             self.write_config()
             mqtt_pass = text
+
+
+        def path_time_changed(self, double):
+            global path_time
+            config.set('speed', 'path', str(double))
+            self.write_config()
+            path_time = double
+
+        def point_time_changed(self, double):
+            global point_time
+            config.set('speed', 'point', str(double))
+            self.write_config()
+            point_time = double
 
         def write_config(self):
             try:
@@ -967,8 +1012,6 @@ if __name__ != "__mp_main__":
                 global pitch
                 global roll
                 global controllerTest
-                global camera_path_thread
-                global camera_path_loop
                 global tts
                 global controllers_count
                 global joystickNames
@@ -1031,33 +1074,21 @@ if __name__ != "__mp_main__":
                                 for event in pygame.event.get():
                                     if event.type == pygame.JOYBUTTONDOWN:
                                         if pygame.joystick.Joystick(controller_id).get_button(0):
-                                            camera_path_loop = False
-                                            q.put('waypoint added')
+                                            self.ui.pushButton_add_waypoint.click()
                                             print('A')
                                         if pygame.joystick.Joystick(controller_id).get_button(1):
-                                            camera_path_loop = False
-                                            q.put('waypoints deleted')
+                                            self.ui.pushButton_delete_all.click()
                                             print('B')
                                         if pygame.joystick.Joystick(controller_id).get_button(2):
-                                            camera_path_loop = False
-                                            q.put('going home')
+                                            self.F.goHome(q, config)
                                             print('X')
                                         if pygame.joystick.Joystick(controller_id).get_button(3):
-                                            if camera_path_thread and camera_path_thread.is_alive():
-                                                camera_path_loop = False
-                                                q.put('cancelled')
-                                                camera_path_thread.join()
-                                            else:
-                                                if camera_path_thread and camera_path_thread.is_alive():
-                                                    camera_path_loop = False
-                                                    camera_path_thread.join()
-                                                camera_path_loop = True
-                                                camera_path_thread = Thread(target=do_camera_path, args=("Thread",))
-                                                camera_path_thread.start()
                                             print('Y')
                                         if pygame.joystick.Joystick(controller_id).get_button(6):
+                                            self.goBackward(q, config)
                                             print('window')
                                         if pygame.joystick.Joystick(controller_id).get_button(7):
+                                            self.goForward(q, config)
                                             print('settings')
                                         if pygame.joystick.Joystick(controller_id).get_button(8):
                                             print('left down')
@@ -1066,6 +1097,7 @@ if __name__ != "__mp_main__":
                                         if pygame.joystick.Joystick(controller_id).get_button(10):
                                             print('xbox')
                                         if pygame.joystick.Joystick(controller_id).get_button(11):
+                                            self.showForeground()
                                             print('share')
 
                             except pygame.error as message:
@@ -1174,7 +1206,9 @@ if __name__ != "__mp_main__":
         def keyPressEvent(self, event):
             print('Key: ' + str(event.key()) + ' | Text Press: ' + str(event.text()))
             if event.text() == "+":
-                self.F.newWaypoint(q)
+                self.F.newWaypoint(q, config)
+            if event.text() == "-":
+                self.F.deleteAll(q, config)
         ## ==> END ##
 
         ## EVENT ==> RESIZE EVENT
@@ -1201,22 +1235,6 @@ if __name__ != "__mp_main__":
             self.F.stop_hotkey()
             print('closing')
 
-def do_camera_path(threadname):
-    global camera_path_loop
-    n = 3
-
-    while camera_path_loop:
-        match n:
-            case 3:
-                q.put('starting in 3')
-                time.sleep(1.8)
-            case 2:
-                q.put('2')
-                time.sleep(1)
-            case 1:
-                q.put('1')
-                break
-        n = n - 1
 
 
 
@@ -1320,6 +1338,14 @@ if __name__ == "__main__":
     if config.has_option('main', 'mqtt'):
         mqtt_enable = config.getboolean('main', 'mqtt')
 
+    if not config.has_section('speed'):
+        config.add_section('speed')
+
+    if config.has_option('speed', 'path'):
+        path_time = config.getfloat('speed', 'path')
+
+    if config.has_option('speed', 'point'):
+        point_time = config.getfloat('speed', 'point')
 
     if not config.has_section('voice'):
         config.add_section('voice')

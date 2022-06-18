@@ -1019,7 +1019,7 @@ class Ui_MainWindow(object):
         self.pathtimeEdit = QDoubleSpinBox(self.frame_speed)
         self.pathtimeEdit.setObjectName(u"pathtimeEdit")
         self.pathtimeEdit.setSuffix(u" seconds")
-        self.pathtimeEdit.setMinimum(1)
+        self.pathtimeEdit.setMinimum(.01)
         self.pathtimeEdit.setValue(3.00)
         self.pathtimeEdit.setMaximum(3600)
         self.pathtimeEdit.setMinimumSize(QSize(0, 30))
@@ -1122,7 +1122,7 @@ class Ui_MainWindow(object):
 
         self.pointtimeEdit = QDoubleSpinBox(self.frame_speed)
         self.pointtimeEdit.setSuffix(u" seconds")
-        self.pointtimeEdit.setMinimum(0)
+        self.pointtimeEdit.setMinimum(0.01)
         self.pointtimeEdit.setMaximum(60)
         self.pointtimeEdit.setObjectName(u"pointtimeEdit")
         self.pointtimeEdit.setMinimumSize(QSize(0, 30))
@@ -2982,5 +2982,5 @@ class Ui_MainWindow(object):
         self.tableWidget.setSortingEnabled(__sortingEnabled)
 
         self.label_credits.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://robertsspaceindustries.com/citizens/LordSkippy\">by /citizens/LordSkippy</a>", None))
-        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://www.lordskippy.com/software/virtual-camera-robot#h.nrhw9hcv3l2i\">v0.1.0</a>", None))
+        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://www.lordskippy.com/software/virtual-camera-robot#h.nrhw9hcv3l2i\">v0.2.0</a>", None))
     # retranslateUi

@@ -5,6 +5,7 @@ import socket, struct
 import ctypes, ctypes.wintypes
 from pynput.mouse import Controller
 import numpy as np
+from scipy import interpolate
 
 print('NAME', __name__)
 
@@ -30,15 +31,34 @@ class Functions(MainWindow):
             print('hotkey FAILED')
 
     def send_to_opentrack_thread(self, threadname):
+
         while self.sendToOpenTrack:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                self.clock.tick(200) #200 fps
-                position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
+                self.clock.tick(self.fps) #200 fps
+
+                if self.robot == None:
+                    position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
+                else:
+                    if self.robot[0].size > 1:
+                        print('SIZE', self.robot[0].size, 'X:', self.robot[0][0])
+                        position = [self.robot[0][0], self.robot[1][0], self.robot[2][0], self.robot[3][0], self.robot[4][0], self.robot[5][0]]
+                        self.robot = [np.delete(self.robot[0], 0), np.delete(self.robot[1], 0), np.delete(self.robot[2], 0), np.delete(self.robot[3], 0), np.delete(self.robot[4], 0), np.delete(self.robot[5], 0)]
+                    else:
+                        print('FINAL')
+                        self.x = self.robot[0][0]
+                        self.y = self.robot[1][0]
+                        self.z = self.robot[2][0]
+                        self.yaw = self.robot[3][0]
+                        self.pitch = self.robot[4][0]
+                        self.roll = self.robot[5][0]
+                        self.robot = None
+
                 struct.pack_into('dddddd', self.buf, 0, *position)
                 try:
                     sock.sendto(self.buf, self.address)
                 except:
                     print("socket error")
+
 
     def __init__(self, window, UIFunctions):
 
@@ -51,6 +71,9 @@ class Functions(MainWindow):
 
         self.points = np.empty((0,6), float)
 
+        self.robot = None
+
+        self.fps = 200
 
         self.sendToOpenTrack = True
         self.waitForHotkeyTid = None
@@ -63,7 +86,6 @@ class Functions(MainWindow):
         #    ctypes.windll.user32.UnregisterHotKey(None, 1)
         ###
 
-        self.config_input_method = "keyboard"
         self.config_mouse_sensitivity = 0.01
         self.config_keyboard_sensitivity_t = 0.05
         self.config_keyboard_sensitivity_r = 0.2
@@ -231,17 +253,158 @@ class Functions(MainWindow):
             return old + new/100
 
     def updateOpenTrack(self,x,y,z,yaw,pitch,roll):
+        if self.robot == None:
+            self.x = x * 2
+            self.y = y * 2
+            self.z = z * 2
+            self.yaw = yaw * 10
+            self.pitch = pitch * 10
+            self.roll = roll * 20
 
-        self.x = x * 2
-        self.y = y * 2
-        self.z = z * 2
-        self.yaw = yaw * 10
-        self.pitch = pitch * 10
-        self.roll = roll * 20
+    def calculateSpline(self, path, duration):
 
-    def newWaypoint(self, queue):
-        if self.config_input_method == "keyboard":
+        frames = duration * self.fps
+
+        k_limit = 2
+        pathT = path.T #transpose array: all x values in one array etc
+
+        print(path)
+        print(pathT)
+
+        if (len(path) < 3):
+            k_limit = 1
+
+        try:
+            tck, u = interpolate.splprep([pathT[0],pathT[1],pathT[2],pathT[3],pathT[4],pathT[5]], s=0, k=k_limit)
+            u_fine = np.linspace(0,1,int(frames))
+            x_fine, y_fine, z_fine, yaw_fine, pitch_fine, roll_fine = interpolate.splev(u_fine, tck)
+            return [x_fine, y_fine, z_fine, yaw_fine, pitch_fine, roll_fine]
+        except Exception as error:
+            print('Splite interpolation error', error)
+            return np.empty((0,6), float)
+
+    def showForeground(self):
+        if self.window.windowState() == Qt.WindowMinimized:
+            #for whatever reason this breaks with fullscreen (and minimized from fullscreen)
+            self.window.showNormal()
+            time.sleep(0.2)
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shell.SendKeys('%')
+        win32gui.SetForegroundWindow(win32gui.FindWindowEx(0,0,0, "CamBot 6D"))
+
+    def newWaypoint(self, queue, config):
+        if config.has_option('controllers', 'type'):
+            controller = config.get('controllers', 'type')
+        else:
+            controller = keyboardandmouse
+
+        if controller == "keyboardandmouse":
+            self.robot = None
             self.checkMouseKeyboard(queue)
+        else:
+            if self.robot == None:
+                self.saveWaypoint(queue)
+
+    def deleteAll(self, queue, config):
+        queue.put('all waypoints deleted')
+        self.points = np.empty((0,6), float)
+
+        table = self.window.ui.tableWidget_waypoints
+        count = table.rowCount()
+
+        if count > 0:
+            while count >= 0:
+              self.window.ui.tableWidget_waypoints.removeRow(count)
+              count -= 1
+
+            self.toggleTable(False)
+            QtCore.QTimer.singleShot(600, lambda: self.window.ui.tableWidget_waypoints.hide())
+            QtCore.QTimer.singleShot(600, lambda: self.window.ui.label_help_info.show())
+
+
+
+    def pathForward(self, queue, config):
+        duration = 3.0
+        if config.has_option('speed', 'path'):
+            duration = config.getfloat('speed', 'path')
+
+        path = self.points
+
+        motion = None
+
+        try:
+            #go to starting point
+            spline = self.twoPointSpline([self.x, self.y, self.z, self.yaw, self.pitch, self.roll], path[0], 0.02)
+            motion = spline
+
+            #wait 3 seconds
+            wait = np.ones(3 * self.fps)
+            motion = [np.append(motion[0], wait * path[0][0]), np.append(motion[1], wait * path[0][1]), np.append(motion[2], wait * path[0][2]), np.append(motion[3], wait * path[0][3]), np.append(motion[4], wait * path[0][4]), np.append(motion[5], wait * path[0][5])]
+
+            #do the motion
+            spline = self.calculateSpline(path, duration)
+            motion = [np.append(motion[0], spline[0]), np.append(motion[1], spline[1]), np.append(motion[2], spline[2]), np.append(motion[3], spline[3]), np.append(motion[4], spline[4]), np.append(motion[5], spline[5])]
+
+            queue.put('starting in three,. two,. one.')
+
+            self.robot = motion
+
+        except Exception as error:
+            queue.put('error: unable to calculate camera path')
+
+
+    def pathBackward(self, queue, config):
+        duration = 3.0
+        if config.has_option('speed', 'path'):
+            duration = config.getfloat('speed', 'path')
+
+        path = np.flipud(self.points)
+
+        motion = None
+
+        try:
+            #go to starting point
+            spline = self.twoPointSpline([self.x, self.y, self.z, self.yaw, self.pitch, self.roll], path[0], 0.02)
+            motion = spline
+
+            #wait 3 seconds
+            wait = np.ones(3 * self.fps)
+            motion = [np.append(motion[0], wait * path[0][0]), np.append(motion[1], wait * path[0][1]), np.append(motion[2], wait * path[0][2]), np.append(motion[3], wait * path[0][3]), np.append(motion[4], wait * path[0][4]), np.append(motion[5], wait * path[0][5])]
+
+            #do the motion
+            spline = self.calculateSpline(path, duration)
+            motion = [np.append(motion[0], spline[0]), np.append(motion[1], spline[1]), np.append(motion[2], spline[2]), np.append(motion[3], spline[3]), np.append(motion[4], spline[4]), np.append(motion[5], spline[5])]
+
+            queue.put('starting in three,. two,. one.')
+
+            self.robot = motion
+
+        except Exception as error:
+            queue.put('error: unable to calculate camera path')
+
+    def twoPointSpline(self, position_from, position_to, duration):
+        if position_from[0] != position_to[0] or position_from[1] != position_to[1] or position_from[2] != position_to[2] or position_from[3] != position_to[3] or position_from[4] != position_to[4] or position_from[5] != position_to[5]:
+            path = np.empty((0,6), float)
+            path = np.concatenate((path, [position_from]))
+            path = np.concatenate((path, [position_to]))
+            return self.calculateSpline(path, duration)
+        else:
+            return np.empty((0,6), float)
+
+    def goHome(self, queue, config):
+        duration = 0.5 #seconds
+        position_from = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
+        position_to = [0, 0, 0, 0, 0, 0]
+        if self.x != position_to[0] or self.y != position_to[1] or self.z != position_to[2] or self.yaw != position_to[3] or self.pitch != position_to[4] or self.roll != position_to[5]:
+            queue.put('going home')
+            path = np.empty((0,6), float)
+            path = np.concatenate((path, [position_from]))
+            path = np.concatenate((path, [position_to]))
+            self.robot = self.calculateSpline(path, duration)
+        else:
+            queue.put('already home')
+            self.robot = None
+
 
     def saveWaypoint(self, queue):
         queue.put('waypoint added')
@@ -273,19 +436,18 @@ class Functions(MainWindow):
 
 
         if not rowPosition:
-            Functions.toggleTable(self)
+            Functions.toggleTable(self, True)
             QtCore.QTimer.singleShot(350, lambda: self.window.ui.tableWidget_waypoints.show())
-
 
     ## ==> TOGGLE TABLE WIDGET
     ########################################################################
-    def toggleTable(self):
+    def toggleTable(self, expand):
         height = self.window.ui.frame_div_table_widget_M1.height()
         maxExtend = 205
         standard = 58
 
         # SET MAX WIDTH
-        if height == 58:
+        if expand:
             heightExtended = maxExtend
             self.window.ui.label_help_info.hide()
         else:
@@ -311,7 +473,7 @@ class Functions(MainWindow):
             self.window.ui.tableWidget_waypoints.removeRow(row)
 
         if count == 1:
-            self.toggleTable()
+            self.toggleTable(False)
             QtCore.QTimer.singleShot(600, lambda: self.window.ui.tableWidget_waypoints.hide())
             QtCore.QTimer.singleShot(600, lambda: self.window.ui.label_help_info.show())
 
