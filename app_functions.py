@@ -34,13 +34,13 @@ class Functions(MainWindow):
 
         while self.sendToOpenTrack:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                self.clock.tick(self.fps) #200 fps
 
                 if self.robot == None:
                     position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
                 else:
+                    #print('SIZE', self.robot[0].size, 'TICK', self.clock.tick_busy_loop())
                     if self.robot[0].size > 1:
-                        print('SIZE', self.robot[0].size, 'X:', self.robot[0][0])
+                        #print('SIZE', self.robot[0].size, 'X:', self.robot[0][0])
                         position = [self.robot[0][0], self.robot[1][0], self.robot[2][0], self.robot[3][0], self.robot[4][0], self.robot[5][0]]
                         self.robot = [np.delete(self.robot[0], 0), np.delete(self.robot[1], 0), np.delete(self.robot[2], 0), np.delete(self.robot[3], 0), np.delete(self.robot[4], 0), np.delete(self.robot[5], 0)]
                     else:
@@ -59,6 +59,8 @@ class Functions(MainWindow):
                 except:
                     print("socket error")
 
+                self.clock.tick(self.fps) #200 fps
+
 
     def __init__(self, window, UIFunctions):
 
@@ -73,7 +75,7 @@ class Functions(MainWindow):
 
         self.robot = None
 
-        self.fps = 200
+        self.fps = 120
 
         self.sendToOpenTrack = True
         self.waitForHotkeyTid = None
@@ -265,11 +267,13 @@ class Functions(MainWindow):
 
         frames = duration * self.fps
 
+        print('FRAMES', frames)
+
         k_limit = 2
         pathT = path.T #transpose array: all x values in one array etc
 
-        print(path)
-        print(pathT)
+        #print(path)
+        #print(pathT)
 
         if (len(path) < 3):
             k_limit = 1
@@ -334,11 +338,12 @@ class Functions(MainWindow):
 
         try:
             #go to starting point
-            spline = self.twoPointSpline([self.x, self.y, self.z, self.yaw, self.pitch, self.roll], path[0], 0.02)
+            spline = self.twoPointSpline([self.x, self.y, self.z, self.yaw, self.pitch, self.roll], path[0], 0.5)
             motion = spline
 
             #wait 3 seconds
             wait = np.ones(3 * self.fps)
+            print("WAIT", len(wait))
             motion = [np.append(motion[0], wait * path[0][0]), np.append(motion[1], wait * path[0][1]), np.append(motion[2], wait * path[0][2]), np.append(motion[3], wait * path[0][3]), np.append(motion[4], wait * path[0][4]), np.append(motion[5], wait * path[0][5])]
 
             #do the motion
@@ -364,7 +369,7 @@ class Functions(MainWindow):
 
         try:
             #go to starting point
-            spline = self.twoPointSpline([self.x, self.y, self.z, self.yaw, self.pitch, self.roll], path[0], 0.02)
+            spline = self.twoPointSpline([self.x, self.y, self.z, self.yaw, self.pitch, self.roll], path[0], .5)
             motion = spline
 
             #wait 3 seconds
@@ -392,7 +397,7 @@ class Functions(MainWindow):
             return np.empty((0,6), float)
 
     def goHome(self, queue, config):
-        duration = 0.5 #seconds
+        duration = 1 #seconds
         position_from = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
         position_to = [0, 0, 0, 0, 0, 0]
         if self.x != position_to[0] or self.y != position_to[1] or self.z != position_to[2] or self.yaw != position_to[3] or self.pitch != position_to[4] or self.roll != position_to[5]:

@@ -2982,5 +2982,5 @@ class Ui_MainWindow(object):
         self.tableWidget.setSortingEnabled(__sortingEnabled)
 
         self.label_credits.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://robertsspaceindustries.com/citizens/LordSkippy\">by /citizens/LordSkippy</a>", None))
-        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://www.lordskippy.com/software/virtual-camera-robot#h.nrhw9hcv3l2i\">v0.2.0</a>", None))
+        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://www.lordskippy.com/software/virtual-camera-robot#h.nrhw9hcv3l2i\">v0.3.0</a>", None))
     # retranslateUi
