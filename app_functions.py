@@ -39,6 +39,7 @@ class Functions(MainWindow):
                     position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
                 else:
                     #print('SIZE', self.robot[0].size, 'TICK', self.clock.tick_busy_loop())
+                    #print('FPS', self.fps)
                     if self.robot[0].size > 1:
                         #print('SIZE', self.robot[0].size, 'X:', self.robot[0][0])
                         position = [self.robot[0][0], self.robot[1][0], self.robot[2][0], self.robot[3][0], self.robot[4][0], self.robot[5][0]]
@@ -59,7 +60,7 @@ class Functions(MainWindow):
                 except:
                     print("socket error")
 
-                self.clock.tick(self.fps) #200 fps
+                self.clock.tick_busy_loop(self.fps) #200 fps
 
 
     def __init__(self, window, UIFunctions):
