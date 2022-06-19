@@ -32,8 +32,14 @@ class Functions(MainWindow):
 
     def send_to_opentrack_thread(self, threadname):
 
+        loop_delta = 1./self.fps
+        current_time = target_time = time.perf_counter()
+
         while self.sendToOpenTrack:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+
+                previous_time, current_time = current_time, time.perf_counter()
+                time_delta = current_time - previous_time
 
                 if self.robot == None:
                     position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
@@ -60,7 +66,15 @@ class Functions(MainWindow):
                 except:
                     print("socket error")
 
-                self.clock.tick_busy_loop(self.fps) #200 fps
+                #self.fps rate limit
+                target_time += loop_delta
+                sleep_time = target_time - time.perf_counter()
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+
+                #120 fps minus 0.5 milliseconds (time for the loop to execute, rought guess)
+                #time.sleep(1/self.fps - 0.0005) #delay for one frame at self.fps (might execute slightly slower: 8 ms + loop time of 0.5 ms - hence subtraction of 0.5ms)
+                #self.clock.tick_busy_loop(self.fps) #max FPS - but 6.5% CPU usage
 
 
     def __init__(self, window, UIFunctions):
@@ -68,7 +82,7 @@ class Functions(MainWindow):
         self.UIFunctions = UIFunctions
 
         self.window = window
-        self.clock = pygame.time.Clock()
+        #self.clock = pygame.time.clock()
 
         self.mouse = Controller()
 
@@ -123,8 +137,11 @@ class Functions(MainWindow):
 
     def stop_hotkey(self):
         print('stopping hotkey')
-        ctypes.windll.user32.PostThreadMessageW(self.waitForHotkeyTid, WM_QUIT, 0, 0)
-        ctypes.windll.user32.UnregisterHotKey(None, 1)
+        try:
+            ctypes.windll.user32.PostThreadMessageW(self.waitForHotkeyTid, WM_QUIT, 0, 0)
+            ctypes.windll.user32.UnregisterHotKey(None, 1)
+        except Exception as error:
+            print('Error stopping hotkey', error)
 
     def checkMouseKeyboard(self, queue):
 
@@ -168,14 +185,18 @@ class Functions(MainWindow):
         pygame.mouse.set_visible(False)
         pygame.event.set_grab(True)
 
+        loop_delta = 1./self.fps
+        current_time = target_time = time.perf_counter()
+
         while run:
+
+            previous_time, current_time = current_time, time.perf_counter()
+            time_delta = current_time - previous_time
 
             keys = pygame.key.get_pressed()
 
             if (keys[pygame.K_SPACE]):
                 sprint = 3
-
-
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -241,7 +262,14 @@ class Functions(MainWindow):
             self.y += (keys[pygame.K_SPACE] - keys[pygame.K_LCTRL]) * self.config_keyboard_sensitivity_t * self.speed_modifier
             self.roll += (keys[pygame.K_q] - keys[pygame.K_e]) * self.config_keyboard_sensitivity_r * self.speed_modifier
 
-            self.clock.tick(120) #120 fps
+            #self.fps rate limit
+            target_time += loop_delta
+            sleep_time = target_time - time.perf_counter()
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
+            #self.clock.tick(120) #does not work in compiled version. tick_busy_loop does work but uses too many CPU resources.
+            #time.sleep(1/self.fps - 0.0005) #120 fps minus 0.5 milliseconds (time for the loop to execute, rought guess)
 
             #print(self.x,self.y,self.z,self.yaw,self.pitch,self.roll)
 
