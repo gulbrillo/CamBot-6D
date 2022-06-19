@@ -298,7 +298,7 @@ class Functions(MainWindow):
 
         print('FRAMES', frames)
 
-        k_limit = 2
+        k_limit = 2 # todo: Degree of the spline. Cubic splines are recommended. Even values of k should be avoided especially with a small s-value. 1 <= k <= 5, default is 3. !!!
         pathT = path.T #transpose array: all x values in one array etc
 
         #print(path)
@@ -310,7 +310,7 @@ class Functions(MainWindow):
         try:
             tck, u = interpolate.splprep([pathT[0],pathT[1],pathT[2],pathT[3],pathT[4],pathT[5]], s=0, k=k_limit)
             u_fine = np.linspace(0,1,int(frames))
-            x_fine, y_fine, z_fine, yaw_fine, pitch_fine, roll_fine = interpolate.splev(u_fine, tck)
+            x_fine, y_fine, z_fine, yaw_fine, pitch_fine, roll_fine = interpolate.splev(u_fine, tck) #todo: u instead of u_fine? !!!
             return [x_fine, y_fine, z_fine, yaw_fine, pitch_fine, roll_fine]
         except Exception as error:
             print('Splite interpolation error', error)
