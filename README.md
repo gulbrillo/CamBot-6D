@@ -48,17 +48,17 @@ https://github.com/gulbrillo/CamBot-6D/releases
 
 Requires Python 3.10 or higher.
 
-> python3.10.exe .\main.py
+> python3.10.exe .\CamBot6D.py
 
 # Compile
 
-Spec file is provided. This will create a one file executable `main.exe` in `./dist`. 
-> python3.10.exe -m PyInstaller main.spec
+Spec file is provided. This will create a one file executable `CamBot6D.exe` in `./dist`. 
+> python3.10.exe -m PyInstaller CamBot6D.spec
 
 The spec file can be created with
-> python3.10.exe -m PyInstaller --noconsole --onefile --windowed --icon=icon.ico --add-data "./images;images" main.py
+> python3.10.exe -m PyInstaller --noconsole --onefile --windowed --icon=icon.ico --add-data "./images;images" CamBot6D.py
 
-But you need to replace the `datas` line in `main.spec` with this:
+But you need to replace the `datas` line in `CamBot6D.spec` with this:
 > datas=[('./images', 'images'),('./icons', 'icons'),('./fonts', 'fonts')],
 
 # Acknowledgements

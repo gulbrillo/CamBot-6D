@@ -962,7 +962,7 @@ class Ui_MainWindow(object):
         ##
 
         self.verticalLayout_M1a.addLayout(self.gridLayout_M1a)
-        self.gridLayout_M1.addWidget(self.frame_actions)
+        self.gridLayout_M1.addWidget(self.frame_actions, 0, 0, 2, 1)
 
         #######
 
@@ -970,18 +970,18 @@ class Ui_MainWindow(object):
 
         #############
 
-        self.frame_speed = QFrame(self.page_main)
-        self.frame_speed.setObjectName(u"frame_speed")
-        self.frame_speed.setMinimumSize(QSize(210, 50))
-        self.frame_speed.setMaximumSize(QSize(210, 16777215))
-        self.frame_speed.setStyleSheet(u"background-color: rgb(41, 46, 57);\n"
+        self.frame_path = QFrame(self.page_main)
+        self.frame_path.setObjectName(u"frame_path")
+        self.frame_path.setMinimumSize(QSize(270, 50))
+        self.frame_path.setMaximumSize(QSize(270, 16777215))
+        self.frame_path.setStyleSheet(u"background-color: rgb(41, 46, 57);\n"
 "border-radius: 5px;")
-        self.frame_speed.setFrameShape(QFrame.StyledPanel)
-        self.frame_speed.setFrameShadow(QFrame.Raised)
+        self.frame_path.setFrameShape(QFrame.StyledPanel)
+        self.frame_path.setFrameShadow(QFrame.Raised)
 
         #######
 
-        self.verticalLayout_M2a = QVBoxLayout(self.frame_speed)
+        self.verticalLayout_M2a = QGridLayout(self.frame_path)
         self.verticalLayout_M2a.setAlignment(Qt.AlignTop)
         self.verticalLayout_M2a.setSpacing(5)
         self.verticalLayout_M2a.setObjectName(u"verticalLayout_M2a")
@@ -992,34 +992,34 @@ class Ui_MainWindow(object):
 
 
 
-        self.labelBoxSpeed = QLabel(self.frame_speed)
-        self.labelBoxSpeed.setObjectName(u"labelBoxSpeed")
-        self.labelBoxSpeed.setAlignment(Qt.AlignTop)
-        self.labelBoxSpeed.setFont(font1)
-        self.labelBoxSpeed.setStyleSheet(u"")
+        self.labelBoxPath = QLabel(self.frame_path)
+        self.labelBoxPath.setObjectName(u"labelBoxPath")
+        self.labelBoxPath.setAlignment(Qt.AlignTop)
+        self.labelBoxPath.setFont(font1)
+        self.labelBoxPath.setStyleSheet(u"")
 
 
-        self.verticalLayout_M2a.addWidget(self.labelBoxSpeed)
+        self.verticalLayout_M2a.addWidget(self.labelBoxPath, 0, 0, 1, 2)
 
         ##
 
-        self.label_pathtime_info = QLabel(self.frame_speed)
+        self.label_pathtime_info = QLabel(self.frame_path)
         self.label_pathtime_info.setObjectName(u"label_pathtime_info")
         self.label_pathtime_info.setMaximumSize(QSize(210, 16777215))
         font2 = QFont()
         font2.setFamily(u"Segoe UI")
         self.label_pathtime_info.setFont(font2)
         self.label_pathtime_info.setAlignment(Qt.AlignBottom)
-        self.label_pathtime_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 17px; margin-bottom: 3px;")
+        self.label_pathtime_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 3px; margin-bottom: 0px;")
 
-        self.verticalLayout_M2a.addWidget(self.label_pathtime_info)
+        self.verticalLayout_M2a.addWidget(self.label_pathtime_info, 1, 0, 1, 1)
 
         ##
 
-        self.pathtimeEdit = QDoubleSpinBox(self.frame_speed)
+        self.pathtimeEdit = QDoubleSpinBox(self.frame_path)
         self.pathtimeEdit.setObjectName(u"pathtimeEdit")
         self.pathtimeEdit.setSuffix(u" seconds")
-        self.pathtimeEdit.setMinimum(.01)
+        self.pathtimeEdit.setMinimum(.1)
         self.pathtimeEdit.setValue(3.00)
         self.pathtimeEdit.setMaximum(3600)
         self.pathtimeEdit.setMinimumSize(QSize(0, 30))
@@ -1048,20 +1048,20 @@ class Ui_MainWindow(object):
                                        "	border: 2px solid rgb(64, 71, 88);\n"
                                        "}\n")
 
-        self.verticalLayout_M2a.addWidget(self.pathtimeEdit)
+        self.verticalLayout_M2a.addWidget(self.pathtimeEdit, 2, 0, 1, 1)
 
 
         ##
 
-        self.label_ease_info = QLabel(self.frame_speed)
+        self.label_ease_info = QLabel(self.frame_path)
         self.label_ease_info.setObjectName(u"label_ease_info")
         self.label_ease_info.setMaximumSize(QSize(210, 16777215))
         font2 = QFont()
         font2.setFamily(u"Segoe UI")
         self.label_ease_info.setFont(font2)
         self.label_ease_info.setAlignment(Qt.AlignBottom)
-        self.label_ease_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 13px; margin-bottom: 3px;")
-        self.verticalLayout_M2a.addWidget(self.label_ease_info)
+        self.label_ease_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 3px; margin-bottom: 0px;")
+        self.verticalLayout_M2a.addWidget(self.label_ease_info, 1, 1, 1, 1)
 
         ##
 
@@ -1069,7 +1069,7 @@ class Ui_MainWindow(object):
         font8.setFamily(u"Segoe UI")
         font8.setPointSize(9)
 
-        self.easeSelection = QComboBox(self.frame_speed)
+        self.easeSelection = QComboBox(self.frame_path)
         self.easeSelection.setObjectName(u"comboBox")
         self.easeSelection.setFont(font8)
         self.easeSelection.setAutoFillBackground(False)
@@ -1095,39 +1095,195 @@ class Ui_MainWindow(object):
 
 
         self.easeSelection.addItem("")
-        self.easeSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"ease in/out", None))
+        self.easeSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"Disabled", None))
         self.easeSelection.addItem("")
-        self.easeSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"ease in", None))
+        self.easeSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Ease in/out", None))
         self.easeSelection.addItem("")
-        self.easeSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"ease out", None))
+        self.easeSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Ease in", None))
         self.easeSelection.addItem("")
-        self.easeSelection.setItemText(3, QCoreApplication.translate("MainWindow", u"DISABLED", None))
+        self.easeSelection.setItemText(3, QCoreApplication.translate("MainWindow", u"Ease out", None))
 
-        self.verticalLayout_M2a.addWidget(self.easeSelection)
+        self.verticalLayout_M2a.addWidget(self.easeSelection, 2, 1, 1, 1)
 
         ##
 
-        self.label_pointtime_info = QLabel(self.frame_speed)
-        self.label_pointtime_info.setObjectName(u"label_pointtime_info")
-        self.label_pointtime_info.setMaximumSize(QSize(210, 16777215))
+        ##
+
+        self.label_spatial_interpolation_info = QLabel(self.frame_path)
+        self.label_spatial_interpolation_info.setObjectName(u"label_spatial_interpolation_info")
+        self.label_spatial_interpolation_info.setMaximumSize(QSize(210, 16777215))
         font2 = QFont()
         font2.setFamily(u"Segoe UI")
-        self.label_pointtime_info.setFont(font2)
-        self.label_pointtime_info.setAlignment(Qt.AlignBottom)
-        self.label_pointtime_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 13px; margin-bottom: 3px;")
-
-        self.verticalLayout_M2a.addWidget(self.label_pointtime_info)
+        self.label_spatial_interpolation_info.setFont(font2)
+        self.label_spatial_interpolation_info.setAlignment(Qt.AlignBottom)
+        self.label_spatial_interpolation_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 3px; margin-bottom: 0px;")
+        self.verticalLayout_M2a.addWidget(self.label_spatial_interpolation_info, 3, 0, 1, 1)
 
         ##
 
-        self.pointtimeEdit = QDoubleSpinBox(self.frame_speed)
-        self.pointtimeEdit.setSuffix(u" seconds")
-        self.pointtimeEdit.setMinimum(0.01)
-        self.pointtimeEdit.setMaximum(60)
-        self.pointtimeEdit.setObjectName(u"pointtimeEdit")
-        self.pointtimeEdit.setMinimumSize(QSize(0, 30))
-        self.pointtimeEdit.setValue(1.00)
-        self.pointtimeEdit.setStyleSheet(u"QDoubleSpinBox{\n"
+        font8 = QFont()
+        font8.setFamily(u"Segoe UI")
+        font8.setPointSize(9)
+
+        self.spatialInterpolationSelection = QComboBox(self.frame_path)
+        self.spatialInterpolationSelection.setObjectName(u"comboBox")
+        self.spatialInterpolationSelection.setFont(font8)
+        self.spatialInterpolationSelection.setAutoFillBackground(False)
+        self.spatialInterpolationSelection.setMinimumSize(QSize(100, 30))
+        self.spatialInterpolationSelection.setStyleSheet(u"QComboBox{\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding: 5px;\n"
+"	padding-left: 10px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QComboBox QAbstractItemView {\n"
+"	color: rgb(85, 170, 255);	\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	padding: 10px;\n"
+"	selection-background-color: rgb(39, 44, 54);\n"
+"}")
+        self.spatialInterpolationSelection.setIconSize(QSize(16, 16))
+        self.spatialInterpolationSelection.setFrame(True)
+
+
+        self.spatialInterpolationSelection.addItem("")
+        self.spatialInterpolationSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"Linear", None))
+        self.spatialInterpolationSelection.addItem("")
+        self.spatialInterpolationSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Quadratic", None))
+        self.spatialInterpolationSelection.addItem("")
+        self.spatialInterpolationSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Cubic", None))
+
+        self.verticalLayout_M2a.addWidget(self.spatialInterpolationSelection, 4, 0, 1, 1)
+
+        ##
+
+        ##
+
+        self.label_temporal_interpolation_info = QLabel(self.frame_path)
+        self.label_temporal_interpolation_info.setObjectName(u"label_temporal_interpolation_info")
+        self.label_temporal_interpolation_info.setMaximumSize(QSize(210, 16777215))
+        font2 = QFont()
+        font2.setFamily(u"Segoe UI")
+        self.label_temporal_interpolation_info.setFont(font2)
+        self.label_temporal_interpolation_info.setAlignment(Qt.AlignBottom)
+        self.label_temporal_interpolation_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 3px; margin-bottom: 0px;")
+        self.verticalLayout_M2a.addWidget(self.label_temporal_interpolation_info, 3, 1, 1, 1)
+
+        ##
+
+        font8 = QFont()
+        font8.setFamily(u"Segoe UI")
+        font8.setPointSize(9)
+
+        self.temporalInterpolationSelection = QComboBox(self.frame_path)
+        self.temporalInterpolationSelection.setObjectName(u"comboBox")
+        self.temporalInterpolationSelection.setFont(font8)
+        self.temporalInterpolationSelection.setAutoFillBackground(False)
+        self.temporalInterpolationSelection.setMinimumSize(QSize(100, 30))
+        self.temporalInterpolationSelection.setStyleSheet(u"QComboBox{\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding: 5px;\n"
+"	padding-left: 10px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QComboBox QAbstractItemView {\n"
+"	color: rgb(85, 170, 255);	\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	padding: 10px;\n"
+"	selection-background-color: rgb(39, 44, 54);\n"
+"}")
+        self.temporalInterpolationSelection.setIconSize(QSize(16, 16))
+        self.temporalInterpolationSelection.setFrame(True)
+
+
+        self.temporalInterpolationSelection.addItem("")
+        self.temporalInterpolationSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"Auto", None))
+        self.temporalInterpolationSelection.addItem("")
+        self.temporalInterpolationSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Isochronous", None))
+        self.temporalInterpolationSelection.addItem("")
+        self.temporalInterpolationSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Constant", None))
+
+        self.verticalLayout_M2a.addWidget(self.temporalInterpolationSelection, 4, 1, 1, 1)
+
+        ##
+
+
+        #self.verticalLayout_M2a.addLayout(self.gridLayout_M2a)
+
+        #######
+
+
+        self.gridLayout_M1.addWidget(self.frame_path, 0, 1, 1, 1)
+
+        #############
+
+
+        #############
+
+        self.frame_skip = QFrame(self.page_main)
+        self.frame_skip.setObjectName(u"frame_skip")
+        self.frame_skip.setMinimumSize(QSize(270, 50))
+        self.frame_skip.setMaximumSize(QSize(270, 16777215))
+        self.frame_skip.setStyleSheet(u"background-color: rgb(41, 46, 57);\n"
+"border-radius: 5px;")
+        self.frame_skip.setFrameShape(QFrame.StyledPanel)
+        self.frame_skip.setFrameShadow(QFrame.Raised)
+
+        #######
+
+        self.verticalLayout_M2b = QGridLayout(self.frame_skip)
+        self.verticalLayout_M2b.setAlignment(Qt.AlignTop)
+        self.verticalLayout_M2b.setSpacing(5)
+        self.verticalLayout_M2b.setObjectName(u"verticalLayout_M2b")
+        self.verticalLayout_M2b.setContentsMargins(10, 10, 10, 10)
+
+        #######
+
+
+
+
+        self.labelBoxSkip = QLabel(self.frame_skip)
+        self.labelBoxSkip.setObjectName(u"labelBoxSkip")
+        self.labelBoxSkip.setAlignment(Qt.AlignTop)
+        self.labelBoxSkip.setFont(font1)
+        self.labelBoxSkip.setStyleSheet(u"")
+
+
+        self.verticalLayout_M2b.addWidget(self.labelBoxSkip, 0, 0, 1, 2)
+
+
+        ##
+
+        self.label_skiptime_info = QLabel(self.frame_skip)
+        self.label_skiptime_info.setObjectName(u"label_skiptime_info")
+        self.label_skiptime_info.setMaximumSize(QSize(210, 16777215))
+        font2 = QFont()
+        font2.setFamily(u"Segoe UI")
+        self.label_skiptime_info.setFont(font2)
+        self.label_skiptime_info.setAlignment(Qt.AlignBottom)
+        self.label_skiptime_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 3px; margin-bottom: 0px;")
+
+        self.verticalLayout_M2b.addWidget(self.label_skiptime_info, 1, 0, 1, 1)
+
+
+        ##
+
+        self.skiptimeEdit = QDoubleSpinBox(self.frame_skip)
+        self.skiptimeEdit.setSuffix(u" seconds")
+        self.skiptimeEdit.setMinimum(0.1)
+        self.skiptimeEdit.setMaximum(60)
+        self.skiptimeEdit.setObjectName(u"skiptimeEdit")
+        self.skiptimeEdit.setMinimumSize(QSize(0, 30))
+        self.skiptimeEdit.setValue(1.00)
+        self.skiptimeEdit.setStyleSheet(u"QDoubleSpinBox{\n"
                                         "	background-color: rgb(27, 29, 35);\n"
                                         "	border-radius: 5px;\n"
                                         "	border: 2px solid rgb(27, 29, 35);\n"
@@ -1152,16 +1308,75 @@ class Ui_MainWindow(object):
                                         "	border: 2px solid rgb(64, 71, 88);\n"
                                         "}\n")
 
-        self.verticalLayout_M2a.addWidget(self.pointtimeEdit)
+        self.verticalLayout_M2b.addWidget(self.skiptimeEdit, 2, 0, 1, 1)
 
         ##
 
-        #self.verticalLayout_M2a.addLayout(self.gridLayout_M2a)
+        self.label_skipease_info = QLabel(self.frame_skip)
+        self.label_skipease_info.setObjectName(u"label_skipease_info")
+        self.label_skipease_info.setMaximumSize(QSize(210, 16777215))
+        font2 = QFont()
+        font2.setFamily(u"Segoe UI")
+        self.label_skipease_info.setFont(font2)
+        self.label_skipease_info.setAlignment(Qt.AlignBottom)
+        self.label_skipease_info.setStyleSheet(u"color: rgb(98, 103, 111); margin-top: 3px; margin-bottom: 0px;")
+
+        self.verticalLayout_M2b.addWidget(self.label_skipease_info, 1, 1, 1, 1)
+
+
+        ##
+
+        font8 = QFont()
+        font8.setFamily(u"Segoe UI")
+        font8.setPointSize(9)
+
+        self.skipEaseSelection = QComboBox(self.frame_skip)
+        self.skipEaseSelection.setObjectName(u"comboBox")
+        self.skipEaseSelection.setFont(font8)
+        self.skipEaseSelection.setAutoFillBackground(False)
+        self.skipEaseSelection.setMinimumSize(QSize(100, 30))
+        self.skipEaseSelection.setStyleSheet(u"QComboBox{\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding: 5px;\n"
+"	padding-left: 10px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QComboBox QAbstractItemView {\n"
+"	color: rgb(85, 170, 255);	\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	padding: 10px;\n"
+"	selection-background-color: rgb(39, 44, 54);\n"
+"}")
+        self.skipEaseSelection.setIconSize(QSize(16, 16))
+        self.skipEaseSelection.setFrame(True)
+
+
+        self.skipEaseSelection.addItem("")
+        self.skipEaseSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"Disabled", None))
+        self.skipEaseSelection.addItem("")
+        self.skipEaseSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Ease in/out", None))
+        self.skipEaseSelection.addItem("")
+        self.skipEaseSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Ease in", None))
+        self.skipEaseSelection.addItem("")
+        self.skipEaseSelection.setItemText(3, QCoreApplication.translate("MainWindow", u"Ease out", None))
+
+        self.verticalLayout_M2b.addWidget(self.skipEaseSelection)
+
+        ##
+
+        #self.verticalLayout_M2b.addLayout(self.gridLayout_M2b)
 
         #######
 
 
-        self.gridLayout_M1.addWidget(self.frame_speed, 0, 1, 1, 1)
+        self.gridLayout_M1.addWidget(self.frame_skip, 1, 1, 1, 1)
+
+        #############
+
 
         #############
 
@@ -1186,8 +1401,8 @@ class Ui_MainWindow(object):
         self.gridLayout_M6.setObjectName(u"gridLayout_M6")
         self.pushButton_delete_all = QPushButton(self.frame_div_table_widget_M1)
         self.pushButton_delete_all.setObjectName(u"pushButton_delete_all")
-        self.pushButton_delete_all.setMinimumSize(QSize(200, 40))
-        self.pushButton_delete_all.setMaximumSize(QSize(200, 40))
+        self.pushButton_delete_all.setMinimumSize(QSize(260, 40))
+        self.pushButton_delete_all.setMaximumSize(QSize(260, 40))
         fontM7 = QFont()
         fontM7.setFamily(u"Segoe UI")
         fontM7.setPointSize(11)
@@ -2887,14 +3102,15 @@ class Ui_MainWindow(object):
         self.label_top_info_2.setText(QCoreApplication.translate("MainWindow", u"| CAMERA", None))
         self.label_user_icon.setText(QCoreApplication.translate("MainWindow", u"WM", None))
 
-        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need:<p><p style=\"margin: 0; margin-top: 5px;\"><a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/opentrack/opentrack/releases\"><strong>opentrack</strong></a> (a head tracking data relay software)</p><p style=\"margin: 0; margin-left: 10px;\">started with linear mapping, 'UDP over network' input, 'freetrack 2.0 Enhanced' output,<br/>filter set to 'Accela' with low smoothing (Rotation 1°, Position 0.3mm) and no deadzone (Rotation 0°, Position 0mm)</p><p style=\"margin: 0; margin-top: 3px;\"><a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> (coming soon™)</p><p style=\"margin: 0; margin-left: 10px;\">set to 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ], 'Toggle Enabled' = [ <strong>No</strong> ]<br/>and 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking' → 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ] (and <strong>toggled on</strong> in game)</p>", None))
+        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need:<p><p style=\"margin: 0; margin-top: 5px;\"><a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/opentrack/opentrack/releases\"><strong>opentrack</strong></a> (a head tracking data relay software)</p><p style=\"margin: 0; margin-left: 10px;\">started with linear mapping, 'UDP over network' input, 'freetrack 2.0 Enhanced' output, 'relative translation' mode enabled, filter set to 'Accela' with low smoothing (Rotation 1°, Position 0.3mm) and no deadzone (Rotation 0°, Position 0mm)</p><p style=\"margin: 0; margin-top: 3px;\"><a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> (coming soon™)</p><p style=\"margin: 0; margin-left: 10px;\">set to 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ], 'Toggle Enabled' = [ <strong>No</strong> ]<br/>and 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking' → 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ] (and <strong>toggled on</strong> in game)</p>", None))
 
 
         self.pushButton_add_waypoint.setText(QCoreApplication.translate("MainWindow", u" ADD WAYPOINT", None))
         self.pushButton_delete_all.setText(QCoreApplication.translate("MainWindow", u" DELETE ALL", None))
 
         self.labelBoxCamera.setText(QCoreApplication.translate("MainWindow", u"CAMERA CONTROLS", None))
-        self.labelBoxSpeed.setText(QCoreApplication.translate("MainWindow", u"SPEED", None))
+        self.labelBoxPath.setText(QCoreApplication.translate("MainWindow", u"PATH OPTIONS", None))
+        self.labelBoxSkip.setText(QCoreApplication.translate("MainWindow", u"SKIP OPTIONS", None))
 
         self.pushButton_prev.setText(QCoreApplication.translate("MainWindow", u"", None))
         self.pushButton_next.setText(QCoreApplication.translate("MainWindow", u"", None))
@@ -2918,9 +3134,12 @@ class Ui_MainWindow(object):
         self.labelBoxLicense.setText(QCoreApplication.translate("MainWindow", u"DISTRIBUTED UNDER MIT LICENSE", None))
         self.label_license_info.setText(QCoreApplication.translate("MainWindow", u"<strong>Copyright © 2020 Wanderson M. Pimenta<br/>Copyright © 2022 Simon F. Barke</strong><p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p><p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p><p>THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>", None))
 
-        self.label_ease_info.setText(QCoreApplication.translate("MainWindow", u"Camera path time interpolation", None))
-        self.label_pathtime_info.setText(QCoreApplication.translate("MainWindow", u"Duration of full camera path motion", None))
-        self.label_pointtime_info.setText(QCoreApplication.translate("MainWindow", u"Duration of single waypoint skip", None))
+        self.label_ease_info.setText(QCoreApplication.translate("MainWindow", u"Easing", None))
+        self.label_spatial_interpolation_info.setText(QCoreApplication.translate("MainWindow", u"Spatial interpolation", None))
+        self.label_temporal_interpolation_info.setText(QCoreApplication.translate("MainWindow", u"Temporal interpolation", None))
+        self.label_pathtime_info.setText(QCoreApplication.translate("MainWindow", u"Total duration", None))
+        self.label_skiptime_info.setText(QCoreApplication.translate("MainWindow", u"Duration", None))
+        self.label_skipease_info.setText(QCoreApplication.translate("MainWindow", u"Easing", None))
 
         self.opentrackIPEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 127.0.0.1", None))
         self.opentrackPortEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 4242", None))
@@ -2982,5 +3201,5 @@ class Ui_MainWindow(object):
         self.tableWidget.setSortingEnabled(__sortingEnabled)
 
         self.label_credits.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://robertsspaceindustries.com/citizens/LordSkippy\">by /citizens/LordSkippy</a>", None))
-        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://www.lordskippy.com/software/virtual-camera-robot#h.nrhw9hcv3l2i\">v0.3.0</a>", None))
+        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://www.lordskippy.com/software/virtual-camera-robot#h.nrhw9hcv3l2i\">v0.4.0</a>", None))
     # retranslateUi

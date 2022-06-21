@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['main.py'],
+    ['CamBot6D.py'],
     pathex=[],
     binaries=[],
     datas=[('./images', 'images'),('./icons', 'icons'),('./fonts', 'fonts')],
@@ -37,7 +37,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='main',
+    name='CamBot6D',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

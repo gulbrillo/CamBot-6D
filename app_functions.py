@@ -306,10 +306,30 @@ class Functions(MainWindow):
 
         if (len(path) < 3):
             k_limit = 1
+        elif (len(path) < 4):
+            k_limit = 2 #2 todo: make this selectable
+
+        print('klimit', k_limit)
 
         try:
             tck, u = interpolate.splprep([pathT[0],pathT[1],pathT[2],pathT[3],pathT[4],pathT[5]], s=0, k=k_limit)
+
+            # SPATIAL INTERPOLATION: linear, quadratic, cubic
+
+            # TEMPORAL INTERPOLATION: auto
             u_fine = np.linspace(0,1,int(frames))
+
+            # TEMPORAL INTERPOLATION: equidistant
+            u_fine = np.array([.0]) #first element of array (0 = start point)
+
+            for i in range(len(u)):
+                if i != 0:
+                    section = np.linspace(u[i-1],u[i],int(frames / (len(u) - 1) )) #create array with same number of elements between u points
+                    section = np.delete(section, 0) #remove first element of section
+                    u_fine = np.append(u_fine, section)
+
+
+
             x_fine, y_fine, z_fine, yaw_fine, pitch_fine, roll_fine = interpolate.splev(u_fine, tck) #todo: u instead of u_fine? !!!
             return [x_fine, y_fine, z_fine, yaw_fine, pitch_fine, roll_fine]
         except Exception as error:
