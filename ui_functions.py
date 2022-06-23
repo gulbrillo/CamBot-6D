@@ -15,7 +15,7 @@
 ################################################################################
 
 ## ==> GUI FILE
-from main import *
+from CamBot6D import *
 
 ## ==> GLOBALS
 GLOBAL_STATE = 0

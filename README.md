@@ -12,6 +12,11 @@ You can also use CamBot 6D to split the advanced camera controls of Star Citizen
 
 Currently broken
 
+# Limitations
+
+- **Camera offset limited to ±5 meters in X,Y,Z directions**  
+  This is a limitation of 3rd person camera head tracking controls in Star Citizen and cannot be circumvented.
+
 # Dokumentation
 
 A full walkthough of how to use CamBot 6D is on my website:
@@ -22,17 +27,17 @@ https://www.lordskippy.com/software/virtual-camera-robot
 
 ### Requirements:
 
-- opentrack: https://github.com/opentrack/opentrack/releases
-  - if you use TrackIR head tracking, terminate the TrackIR v5 Windows app before using CamBot 6D
-- Star Citizen: https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD
+- **opentrack**: https://github.com/opentrack/opentrack/releases  
+  if you use TrackIR head tracking, terminate the TrackIR v5 Windows app before using CamBot 6D
+- **Star Citizen**: https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD
 
 ### Optional:
 
-- 3Dconnexion SpaceMouse (Enterprise, Pro, or Compact) for full analog 6 axis control
-- Microsoft Xbox Controller (Series X, Series S, or One) for analog 5 axis control (digital control for roll)
-  - if you use CamBot 6D on your gaming PC, 
-- Elgato Stream Deck with [MQTT plugin](https://apps.elgato.com/plugins/com.bi0s.mqtt)
-  - requires an MQTT message broker such as [Eclipse Mosquitto](https://mosquitto.org/) to communicate
+- **3Dconnexion SpaceMouse** (Enterprise, Pro, or Compact) for full analog 6 axis control
+- **Microsoft Xbox Controller** (Series X, Series S, or One) for analog 5 axis control (digital control for roll)  
+  if you use CamBot 6D on your gaming PC, 
+- **Elgato Stream Deck** with [MQTT plugin](https://apps.elgato.com/plugins/com.bi0s.mqtt)  
+  requires an MQTT message broker such as [Eclipse Mosquitto](https://mosquitto.org/) to communicate
 
 # Changelog
 

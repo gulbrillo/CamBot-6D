@@ -2456,115 +2456,117 @@ class Ui_MainWindow(object):
         self.gridLayout_S2.setObjectName(u"gridLayout_S2")
         self.gridLayout_S2.setContentsMargins(-1, -1, -1, 0)
 
-        self.label_opentrack_info = QLabel(self.frame_div_content_S1)
-        self.label_opentrack_info.setWordWrap(True)
-        self.label_opentrack_info.setMargin(0)
-        self.label_opentrack_info.setAlignment(Qt.AlignTop)
-        self.label_opentrack_info.setObjectName(u"label_opentrack_info")
-        self.label_opentrack_info.setMaximumSize(QSize(16777215, 140))
+        self.label_remote_info = QLabel(self.frame_div_content_S1)
+        self.label_remote_info.setWordWrap(True)
+        self.label_remote_info.setMargin(0)
+        self.label_remote_info.setAlignment(Qt.AlignTop)
+        self.label_remote_info.setObjectName(u"label_remote_info")
+        self.label_remote_info.setMaximumSize(QSize(16777215, 140))
         font2 = QFont()
         font2.setFamily(u"Segoe UI")
-        self.label_opentrack_info.setFont(font2)
-        self.label_opentrack_info.setStyleSheet(u"color: rgb(98, 103, 111); ")
+        self.label_remote_info.setFont(font2)
+        self.label_remote_info.setStyleSheet(u"color: rgb(98, 103, 111); ")
 
-        self.gridLayout_S2.addWidget(self.label_opentrack_info, 0, 0, 1, 1)
-
-
-        self.opentrackIPEdit = QLineEdit(self.frame_title_wid_S1)
-        self.opentrackIPEdit.setObjectName(u"opentrackIPEdit")
-        self.opentrackIPEdit.setMinimumSize(QSize(0, 30))
-        self.opentrackIPEdit.setStyleSheet(u"QLineEdit {\n"
-"	background-color: rgb(27, 29, 35);\n"
-"	border-radius: 5px;\n"
-"	border: 2px solid rgb(27, 29, 35);\n"
-"	padding-left: 5px;\n"
-"}\n"
-"QLineEdit:hover {\n"
-"	border: 2px solid rgb(64, 71, 88);\n"
-"}\n"
-"QLineEdit:focus {\n"
-"	border: 2px solid rgb(91, 101, 124);\n"
-"}")
-
-        self.gridLayout_S2.addWidget(self.opentrackIPEdit, 2, 0, 1, 1)
-
-        self.opentrackPortEdit = QLineEdit(self.frame_title_wid_S1)
-        self.opentrackPortEdit.setObjectName(u"opentrackPortEdit")
-        self.opentrackPortEdit.setMinimumSize(QSize(0, 30))
-        self.opentrackPortEdit.setStyleSheet(u"QLineEdit {\n"
-"	background-color: rgb(27, 29, 35);\n"
-"	border-radius: 5px;\n"
-"	border: 2px solid rgb(27, 29, 35);\n"
-"	padding-left: 5px;\n"
-"}\n"
-"QLineEdit:hover {\n"
-"	border: 2px solid rgb(64, 71, 88);\n"
-"}\n"
-"QLineEdit:focus {\n"
-"	border: 2px solid rgb(91, 101, 124);\n"
-"}")
-
-        self.gridLayout_S2.addWidget(self.opentrackPortEdit, 4, 0, 1, 1)
+        self.gridLayout_S2.addWidget(self.label_remote_info, 0, 0, 1, 1)
+##
 
 
+        self.label_ip_info = QLabel(self.frame_div_content_S1)
+        self.label_ip_info.setWordWrap(True)
+        self.label_ip_info.setMargin(0)
+        self.label_ip_info.setAlignment(Qt.AlignTop)
+        self.label_ip_info.setObjectName(u"label_ip_info")
+        self.label_ip_info.setMaximumSize(QSize(16777215, 140))
+        font2 = QFont()
+        font2.setFamily(u"Segoe UI")
+        self.label_ip_info.setFont(font2)
+        self.label_ip_info.setStyleSheet(u"color: rgb(98, 103, 111); ")
 
-        self.label_S1 = QLabel(self.frame_title_wid_S1)
-        self.label_S1.setObjectName(u"label_S1")
-        self.label_S1.setStyleSheet(u"color: rgb(98, 103, 111);")
-        self.label_S1.setLineWidth(1)
-        self.label_S1.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.gridLayout_S2.addWidget(self.label_ip_info, 1, 0, 1, 1)
 
-        self.gridLayout_S2.addWidget(self.label_S1, 1, 0, 1, 1)
 
-        self.label_S2 = QLabel(self.frame_title_wid_S1)
-        self.label_S2.setObjectName(u"label_S2")
-        self.label_S2.setStyleSheet(u"color: rgb(98, 103, 111);")
-        self.label_S2.setLineWidth(1)
-        self.label_S2.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+##
 
-        self.gridLayout_S2.addWidget(self.label_S2, 3, 0, 1, 1)
-
-        self.opentrackTestButton = QPushButton(self.frame_title_wid_S1)
-        self.opentrackTestButton.setObjectName(u"opentrackTestButton")
-        self.opentrackTestButton.setMinimumSize(QSize(0, 30))
         font8 = QFont()
         font8.setFamily(u"Segoe UI")
         font8.setPointSize(9)
-        self.opentrackTestButton.setFont(font8)
-        self.opentrackTestButton.setStyleSheet(u"QPushButton {\n"
-"	border: 2px solid rgb(52, 59, 72);\n"
-"	border-radius: 5px;	\n"
-"	background-color: rgb(52, 59, 72);\n"
+
+        self.remoteSelection = QComboBox(self.frame_title_wid_S1)
+        self.remoteSelection.setObjectName(u"remoteSelection")
+        self.remoteSelection.setFont(font8)
+        self.remoteSelection.setAutoFillBackground(False)
+        self.remoteSelection.setMinimumSize(QSize(100, 30))
+        self.remoteSelection.setStyleSheet(u"QComboBox{\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding: 5px;\n"
+"	padding-left: 10px;\n"
 "}\n"
-"QPushButton:hover {\n"
-"	background-color: rgb(57, 65, 80);\n"
-"	border: 2px solid rgb(61, 70, 86);\n"
+"QComboBox:hover{\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
 "}\n"
-"QPushButton:pressed {	\n"
-"	background-color: rgb(35, 40, 49);\n"
-"	border: 2px solid rgb(43, 50, 61);\n"
+"QComboBox QAbstractItemView {\n"
+"	color: rgb(85, 170, 255);	\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	padding: 10px;\n"
+"	selection-background-color: rgb(39, 44, 54);\n"
 "}")
-        icon3 = QIcon()
-        icon3.addFile(u":/16x16/icons/16x16/cil-media-play.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.opentrackTestButton.setIcon(icon3)
+        self.remoteSelection.setIconSize(QSize(16, 16))
+        self.remoteSelection.setFrame(True)
 
-        self.gridLayout_S2.addWidget(self.opentrackTestButton, 6, 0, 1, 1)
 
-        self.label_S3 = QLabel(self.frame_title_wid_S1)
-        self.label_S3.setObjectName(u"label_S3")
-        self.label_S3.setStyleSheet(u"color: rgb(98, 103, 111);")
-        self.label_S3.setLineWidth(1)
-        self.label_S3.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.remoteSelection.addItem("")
+        self.remoteSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"Disabled (Single PC)", None))
+        self.remoteSelection.addItem("")
+        self.remoteSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Gaming PC (Star Citizen)", None))
+        self.remoteSelection.addItem("")
+        self.remoteSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Remote Control PC", None))
 
-        self.gridLayout_S2.addWidget(self.label_S3, 5, 0, 1, 1)
+        self.gridLayout_S2.addWidget(self.remoteSelection, 2, 0, 1, 1)
 
-        self.horizontalLayout_S10.addLayout(self.gridLayout_S2)
-        self.verticalLayout_S7.addWidget(self.frame_content_wid_S2)
+
+
+##
+        self.label_address_info = QLabel(self.frame_title_wid_S1)
+        self.label_address_info.setObjectName(u"label_address_info")
+        self.label_address_info.setStyleSheet(u"color: rgb(98, 103, 111);")
+        self.label_address_info.setLineWidth(1)
+        self.label_address_info.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_S2.addWidget(self.label_address_info, 3, 0, 1, 1)
+
+##
+
+        self.remoteIPEdit = QLineEdit(self.frame_title_wid_S1)
+        self.remoteIPEdit.setObjectName(u"remoteIPEdit")
+        self.remoteIPEdit.setMinimumSize(QSize(0, 30))
+        self.remoteIPEdit.setStyleSheet(u"QLineEdit {\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding-left: 5px;\n"
+"}\n"
+"QLineEdit:hover {\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QLineEdit:focus {\n"
+"	border: 2px solid rgb(91, 101, 124);\n"
+"}")
+
+        self.gridLayout_S2.addWidget(self.remoteIPEdit, 4, 0, 1, 1)
+
+
+##
+
 
 
         ##
 
 
+
+        self.horizontalLayout_S10.addLayout(self.gridLayout_S2)
+        self.verticalLayout_S7.addWidget(self.frame_content_wid_S2)
 
 
 
@@ -3097,12 +3099,13 @@ class Ui_MainWindow(object):
         self.label_top_info_1.setText(QCoreApplication.translate("MainWindow", u"C:\\Program Files\\Blender Foundation\\Blender 2.82", None))
         self.label_controller_info.setText(QCoreApplication.translate("MainWindow", u"CamBot 6D is compatible with any regular keyboard and mouse.\n\nNote: Does not work in fullscreen mode. Will display an overlay window that captures all mouse and keyboard input while setting waypoints. Can be activated via graphical user interface or Stream Deck MQTT remote.", None))
         self.label_voice_info.setText(QCoreApplication.translate("MainWindow", "Audio feedback useful for single monitor gaming setups in 'Fullscreen' window mode where you can't watch the interface for messages.\n", None))
-        self.label_opentrack_info.setText(QCoreApplication.translate("MainWindow", "Please start opentrack on your gaming PC with 'UDP over network' input and 'freetrack 2.0 Enhanced' output. CamBot 6D can connect to opentrack from any PC within the same network.\n", None))
+        self.label_remote_info.setText(QCoreApplication.translate("MainWindow", "You can remote control CamBot 6D via UDP/IP from another PC in the same network. CamBot 6D must run on both machines. The Gaming PC will act as client and forward the camera position from the Remote Control PC to Star Citizen.", None))
+
         self.label_mqtt_info.setText(QCoreApplication.translate("MainWindow", "MQTT is a network messaging protocol that allows you to connect CamBot 6D to programmable devices (like the Elgato Stream Deck) or smart home interfaces (like the Home Assistant control system). This feature requires an MQTT broker such as Eclipse Mosquitto™.\n", None))
         self.label_top_info_2.setText(QCoreApplication.translate("MainWindow", u"| CAMERA", None))
         self.label_user_icon.setText(QCoreApplication.translate("MainWindow", u"WM", None))
 
-        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need:<p><p style=\"margin: 0; margin-top: 5px;\"><a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/opentrack/opentrack/releases\"><strong>opentrack</strong></a> (a head tracking data relay software)</p><p style=\"margin: 0; margin-left: 10px;\">started with linear mapping, 'UDP over network' input, 'freetrack 2.0 Enhanced' output, 'relative translation' mode enabled, filter set to 'Accela' with low smoothing (Rotation 1°, Position 0.3mm) and no deadzone (Rotation 0°, Position 0mm)</p><p style=\"margin: 0; margin-top: 3px;\"><a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> (coming soon™)</p><p style=\"margin: 0; margin-left: 10px;\">set to 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ], 'Toggle Enabled' = [ <strong>No</strong> ]<br/>and 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking' → 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ] (and <strong>toggled on</strong> in game)</p>", None))
+        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need to:<p><p style=\"margin: 0; margin-top: 5px;\">1) Start <a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/lordskippy/CamBot6D\"><strong>CamBot 6D</strong></a> on your Gaming PC before running Star Citizen</p><p style=\"margin: 0; margin-top: 3px;\">2) Launch <a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> and change the following settings</p><p style=\"margin: 0; margin-left: 10px;\">- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ]<br/>- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Toggle Enabled' = [ <strong>No</strong> ]<br/>- 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking' → 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ]</p><p style=\"margin: 0;\">3) Press <strong>F4</strong> to enter 3rd Person Camera and <strong>Left Shift + Numpad /</strong> to toggle head tracking on and off</p>", None))
 
 
         self.pushButton_add_waypoint.setText(QCoreApplication.translate("MainWindow", u" ADD WAYPOINT", None))
@@ -3119,7 +3122,7 @@ class Ui_MainWindow(object):
         self.pushButton_backward.setText(QCoreApplication.translate("MainWindow", u"REVERSE", None))
 
         self.labelBoxControllers.setText(QCoreApplication.translate("MainWindow", u"CONTROLLER SETUP", None))
-        self.labelBoxOpentrackSettings.setText(QCoreApplication.translate("MainWindow", u"OPENTRACK COMMUNICATION", None))
+        self.labelBoxOpentrackSettings.setText(QCoreApplication.translate("MainWindow", u"DUAL PC", None))
         self.labelBoxVoiceSettings.setText(QCoreApplication.translate("MainWindow", u"VOICE OUTPUT", None))
         self.labelBoxMQTTSettings.setText(QCoreApplication.translate("MainWindow", u"MQTT REMOTE", None))
         self.labelBoxGeneralSettings.setText(QCoreApplication.translate("MainWindow", u"GENERAL", None))
@@ -3141,14 +3144,13 @@ class Ui_MainWindow(object):
         self.label_skiptime_info.setText(QCoreApplication.translate("MainWindow", u"Duration", None))
         self.label_skipease_info.setText(QCoreApplication.translate("MainWindow", u"Easing", None))
 
-        self.opentrackIPEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 127.0.0.1", None))
-        self.opentrackPortEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 4242", None))
-        self.opentrackTestButton.setText(QCoreApplication.translate("MainWindow", u" SEND TEST DATA", None))
+        self.remoteIPEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 127.0.0.1", None))
+        #self.opentrackPortEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 4242", None))
+
         self.MQTTTestButton.setText(QCoreApplication.translate("MainWindow", u" CONNECT TO BROKER", None))
         self.controllerTestButton.setText(QCoreApplication.translate("MainWindow", u" TEST", None))
         self.voiceTestButton.setText(QCoreApplication.translate("MainWindow", u" PLAY VOICE SAMPLE", None))
-        self.label_S1.setText(QCoreApplication.translate("MainWindow", u"IP address of gaming PC:", None))
-        self.label_S2.setText(QCoreApplication.translate("MainWindow", u"opentrack UDP port:", None))
+        self.label_address_info.setText(QCoreApplication.translate("MainWindow", u"IP address of gaming PC:", None))
 
         self.label_S51.setText(QCoreApplication.translate("MainWindow", u"IP address of MQTT broker:", None))
         self.label_S52.setText(QCoreApplication.translate("MainWindow", u"MQTT broker port:", None))

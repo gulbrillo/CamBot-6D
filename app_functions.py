@@ -1,17 +1,60 @@
 ## ==> GUI FILE
-from main import *
+from CamBot6D import *
 import pygame
 import socket, struct
 import ctypes, ctypes.wintypes
+#from ctypes import *
 from pynput.mouse import Controller
 import numpy as np
 from scipy import interpolate
+import mmap
+from dataclasses import dataclass
+#from dataclasses import astuple
+import XInput
+import windows
+import win32event
+
+@dataclass
+class FT_SharedMem:
+    DataID: int
+    CamWidth: int
+    CamHeight: int
+    Yaw: float
+    Pitch: float
+    Roll: float
+    X: float
+    Y: float
+    Z: float
+    RawYaw: float
+    RawPitch: float
+    RawRoll: float
+    RawX: float
+    RawY: float
+    RawZ: float
+    X1: float
+    Y1: float
+    X2: float
+    Y2: float
+    X3: float
+    Y3: float
+    X4: float
+    Y4: float
+    GameID: int
+    table_ints_1: int
+    table_ints_2: int
+    GameID2: int
+
+
+#    def __array__(self):
+#        return np.array(astuple(self))
 
 print('NAME', __name__)
 
 WM_QUIT = 0x0012
 
 class Functions(MainWindow):
+
+    print('CONNECTED', XInput.get_connected())
 
     def wait_for_hotkey_thread(self, threadname):
         print('[ALT]+[Num+] hotkey registration')
@@ -30,51 +73,189 @@ class Functions(MainWindow):
         except:
             print('hotkey FAILED')
 
-    def send_to_opentrack_thread(self, threadname):
+    def send_to_freetrack_thread(self, threadname):
 
         loop_delta = 1./self.fps
         current_time = target_time = time.perf_counter()
 
-        while self.sendToOpenTrack:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        ft_SharedMem_bytes = 92
+        ft_heap_bytes = 92 + 4 + 8 + 4
 
-                previous_time, current_time = current_time, time.perf_counter()
-                time_delta = current_time - previous_time
+        # structure of mmap_mutex
+        # typedef struct FTHeap__ {
+        #     FTData data;
+        #     int32_t GameID;
+        #     union
+        #     {
+        #         unsigned char table[8];
+        #         int32_t table_ints[2];
+        #     };
+        #     int32_t GameID2;
+        # } volatile FTHeap;
 
-                if self.robot == None:
-                    position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
+        #try:
+        #create Non-Persisted Memory-Mapped File
+        mmap_sharedmem = mmap.mmap(-1, ft_heap_bytes, 'FT_SharedMem', access=mmap.ACCESS_DEFAULT,offset=0)
+        #print('MMAP', mmap_sharedmem)
+
+#####
+        """
+        PAGE_READWRITE = 0x04
+        CreateFileMappingA = ctypes.windll.kernel32.CreateFileMappingA
+        CreateFileMappingA.argtypes = [ctypes.wintypes.HANDLE, ctypes.c_void_p, ctypes.wintypes.DWORD, ctypes.wintypes.DWORD, ctypes.wintypes.DWORD, ctypes.wintypes.LPCSTR]
+        mmap_sharedmem_windll = CreateFileMappingA(-1, None, PAGE_READWRITE, 0, ft_SharedMem_bytes, b'FT_SharedMem')
+        if (mmap_sharedmem_windll == 0):
+            raise ctypes.WinError()
+        print('MMAP_DLL', mmap_sharedmem_windll)
+
+
+        #create ipc_heap
+        FILE_MAP_WRITE = 2
+        MapViewOfFile = ctypes.windll.kernel32.MapViewOfFile
+        MapViewOfFile.restype = ctypes.POINTER(ctypes.c_char)
+        ipc_heap = MapViewOfFile(mmap_sharedmem_windll, FILE_MAP_WRITE, 0, 0, ft_heap_bytes)
+        if ipc_heap == 0:
+            raise ctypes.WinError()
+
+        #create ipc_mutex
+        ipc_mutex = ctypes.windll.kernel32.CreateMutexA(None, False, 'FT_SharedMem')
+        if (ipc_mutex == 0):
+            raise ctypes.WinError()
+        print(ipc_mutex)
+
+        #except Exception as e:
+        #    print('ERROR', e)
+        """
+#####
+
+        while self.sendToFreeTrack:
+
+#            try:
+#                with mmap.mmap(-1, ft_heap_bytes, 'FT_SharedMem', access=mmap.ACCESS_DEFAULT,offset=0) as mmap_mutex:
+#                    print(mmap_mutex.read())
+#            except Exception as e:
+#                print('ERROR', e)
+
+#####
+
+            #get data from ipc_mutex
+#            if ipc_mutex:
+#                wait_result = win32event.WaitForSingleObject(ipc_mutex, 16)
+#                if (wait_result == win32event.WAIT_OBJECT_0):
+                    #print(ipc_heap)
+                    #data = struct.unpack('Iiiffffffffffffffffffffiiii', ipc_heap)
+                    #pBuf_str = ctypes.cast(ipc_heap, ctypes.c_char_p)
+                    #print(pBuf_str.value)
+#                    print(ctypes.string_at(ipc_heap))
+#                    ctypes.windll.kernel32.ReleaseMutex(ipc_mutex)
+                    #print(len(ipc_heap))
+            #    shmem.write(szMsg1)
+            #    while (shmem.tell() != SHMEMSIZE):
+            #        shmem.write_byte(" ")
+            #    shmem.seek(0)
+            #    print "WROTE in FIRST process: ", szMsg1
+            #    win32event.ReleaseMutex(hMutex)
+
+            #getGameData
+            #717;Star Citizen;FreeTrack20;V170;;;3450;02CDF4CE4E343EC6B4A200
+
+#####
+
+            previous_time, current_time = current_time, time.perf_counter()
+            time_delta = current_time - previous_time
+
+
+            if self.robot == None:
+                position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
+            else:
+                #print('SIZE', self.robot[0].size, 'TICK', self.clock.tick_busy_loop())
+                #print('FPS', self.fps)
+                if self.robot[0].size > 1:
+                    #print('SIZE', self.robot[0].size, 'X:', self.robot[0][0])
+                    position = [self.robot[0][0], self.robot[1][0], self.robot[2][0], self.robot[3][0], self.robot[4][0], self.robot[5][0]]
+                    self.robot = [np.delete(self.robot[0], 0), np.delete(self.robot[1], 0), np.delete(self.robot[2], 0), np.delete(self.robot[3], 0), np.delete(self.robot[4], 0), np.delete(self.robot[5], 0)]
                 else:
-                    #print('SIZE', self.robot[0].size, 'TICK', self.clock.tick_busy_loop())
-                    #print('FPS', self.fps)
-                    if self.robot[0].size > 1:
-                        #print('SIZE', self.robot[0].size, 'X:', self.robot[0][0])
-                        position = [self.robot[0][0], self.robot[1][0], self.robot[2][0], self.robot[3][0], self.robot[4][0], self.robot[5][0]]
-                        self.robot = [np.delete(self.robot[0], 0), np.delete(self.robot[1], 0), np.delete(self.robot[2], 0), np.delete(self.robot[3], 0), np.delete(self.robot[4], 0), np.delete(self.robot[5], 0)]
-                    else:
-                        print('FINAL')
-                        self.x = self.robot[0][0]
-                        self.y = self.robot[1][0]
-                        self.z = self.robot[2][0]
-                        self.yaw = self.robot[3][0]
-                        self.pitch = self.robot[4][0]
-                        self.roll = self.robot[5][0]
-                        self.robot = None
+                    print('FINAL')
+                    self.x = self.robot[0][0]
+                    self.y = self.robot[1][0]
+                    self.z = self.robot[2][0]
+                    self.yaw = self.robot[3][0]
+                    self.pitch = self.robot[4][0]
+                    self.roll = self.robot[5][0]
+                    self.robot = None
 
-                struct.pack_into('dddddd', self.buf, 0, *position)
-                try:
-                    sock.sendto(self.buf, self.address)
-                except:
-                    print("socket error")
 
-                #self.fps rate limit
-                target_time += loop_delta
-                sleep_time = target_time - time.perf_counter()
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
+            data = struct.unpack('Iiiffffffffffffffffffffiiii', mmap_sharedmem)
+
+            TFreeTrackData = FT_SharedMem(*data)
+            TFreeTrackData.DataID = TFreeTrackData.DataID + 1
+            TFreeTrackData.CamWidth = 100
+            TFreeTrackData.CamHeight = 250
+            TFreeTrackData.X = position[0] #-500..500
+            TFreeTrackData.Y = position[1]
+            TFreeTrackData.Z = position[2]
+            TFreeTrackData.Yaw = position[3]
+            #print(TFreeTrackData.Yaw)
+            TFreeTrackData.Pitch = position[4]
+            TFreeTrackData.Roll = position[5]
+
+            """
+            TFreeTrackData.RawYaw = position[0]
+            TFreeTrackData.RawPitch = position[1]
+            TFreeTrackData.RawRoll = position[2]
+            TFreeTrackData.RawX = position[3]
+            TFreeTrackData.RawY = position[4]
+            TFreeTrackData.RawZ = position[5]
+
+
+
+            TFreeTrackData.X1 = 100.
+            TFreeTrackData.Y1 = 200.
+            TFreeTrackData.X2 = 300.
+            TFreeTrackData.Y2 = 200.
+            TFreeTrackData.X3 = 300.
+            TFreeTrackData.Y3 = 100.
+            """
+
+            #STAR CITIZEN
+            #No;Game Name;Game protocol;Supported since;Verified;By;INTERNATIONAL_ID;FTN_ID
+            #717;Star Citizen;FreeTrack20;V170;;;3450;02CDF4CE4E343EC6B4A200
+            #3450 -187806156 1053209762 3450
+
+            #set GameID2 == GameID if Star Citizen is launched
+            GameID = TFreeTrackData.GameID2
+            GameInt1 = TFreeTrackData.table_ints_1
+            GameInt2 = TFreeTrackData.table_ints_2
+            if TFreeTrackData.GameID != TFreeTrackData.GameID2:
+                if TFreeTrackData.GameID == 3450:
+                    GameID = 3450
+                    GameInt1 = -187806156
+                    GameInt2 = 1053209762
+                if TFreeTrackData.GameID == 1901:
+                    GameID = 1901
+
+            print (TFreeTrackData.GameID, TFreeTrackData.table_ints_1, TFreeTrackData.table_ints_2, TFreeTrackData.GameID2)
+
+            data = struct.pack('Iiiffffffffffffffffffffiiii', TFreeTrackData.DataID, TFreeTrackData.CamWidth, TFreeTrackData.CamHeight, TFreeTrackData.Yaw, TFreeTrackData.Pitch, TFreeTrackData.Roll, TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, TFreeTrackData.GameID, GameInt1, GameInt2, GameID )
+            mmap_sharedmem.seek(0)
+            mmap_sharedmem.write(data)
+
+
+            #self.fps rate limit
+            target_time += loop_delta
+            sleep_time = target_time - time.perf_counter()
+            if sleep_time > 0:
+                time.sleep(sleep_time)
 
                 #120 fps minus 0.5 milliseconds (time for the loop to execute, rought guess)
                 #time.sleep(1/self.fps - 0.0005) #delay for one frame at self.fps (might execute slightly slower: 8 ms + loop time of 0.5 ms - hence subtraction of 0.5ms)
                 #self.clock.tick_busy_loop(self.fps) #max FPS - but 6.5% CPU usage
+
+        #set everything to zero on exit
+        GameID = 0
+        data = struct.pack('Iiiffffffffffffffffffffiiii', 0, 0, 0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, 0, 0, 0, 0 )
+        mmap_sharedmem.seek(0)
+        mmap_sharedmem.write(data)
 
 
     def __init__(self, window, UIFunctions):
@@ -92,7 +273,7 @@ class Functions(MainWindow):
 
         self.fps = 120
 
-        self.sendToOpenTrack = True
+        self.sendToFreeTrack = True
         self.waitForHotkeyTid = None
 
         ###
@@ -109,25 +290,23 @@ class Functions(MainWindow):
 
         self.speed_modifier = 1
 
-        self.send_to_opentrack = ''
+        self.send_to_freetrack = ''
         self.x = 0
         self.y = 0
         self.z = 0
         self.yaw = 0
         self.pitch = 0
         self.roll = 0
-        self.address = ("127.0.0.1", 4242)
-        self.buf = bytearray(8 * 6)
 
         #should be last in __init__
-        self.send_to_opentrack = Thread(target=self.send_to_opentrack_thread, args=("Thread",))
-        self.send_to_opentrack.start()
+        self.send_to_freetrack = Thread(target=self.send_to_freetrack_thread, args=("Thread",))
+        self.send_to_freetrack.start()
 
-    def stop_opentrack(self):
-        print('stopping opentrack')
-        self.sendToOpenTrack = False
-        if self.send_to_opentrack and self.send_to_opentrack.is_alive():
-            self.send_to_opentrack.join()
+    def stop_freetrack(self):
+        print('stopping freetrack')
+        self.sendToFreeTrack = False
+        if self.send_to_freetrack and self.send_to_freetrack.is_alive():
+            self.send_to_freetrack.join()
 
     def start_hotkey(self):
         self.wait_for_hotkey = Thread(target=self.wait_for_hotkey_thread, args=("Thread",))
@@ -283,14 +462,14 @@ class Functions(MainWindow):
         else:
             return old + new/100
 
-    def updateOpenTrack(self,x,y,z,yaw,pitch,roll):
+    def updateFreeTrack(self,x,y,z,yaw,pitch,roll):
         if self.robot == None:
-            self.x = x * 2
-            self.y = y * 2
-            self.z = z * 2
-            self.yaw = yaw * 10
-            self.pitch = pitch * 10
-            self.roll = roll * 20
+            self.x = x
+            self.y = y
+            self.z = z
+            self.yaw = yaw
+            self.pitch = pitch
+            self.roll = roll
 
     def calculateSpline(self, path, duration):
 

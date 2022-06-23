@@ -40,6 +40,13 @@ if __name__ != "__mp_main__":
     import win32con
     import win32gui
     import win32com.client
+
+    import mmap
+    from dataclasses import dataclass
+    import struct
+
+    import math
+
     try:
         import pyi_splash
     except:
@@ -55,6 +62,8 @@ try:
     # this function is called or the Python program is terminated.
 except:
     print ('dev mode')
+
+
 
 
 ###
@@ -116,7 +125,6 @@ voices = []
 
 
 #opentrack
-
 x = 0
 y = 0
 z = 0
@@ -125,8 +133,6 @@ pitch = 0
 roll = 0
 
 transparency = (85, 85, 85) #everything that's black is transparent
-
-fps = 60
 
 #camera bot
 start_points = 100 #todo:  option!
@@ -141,7 +147,6 @@ path_roll = [] #[-180 .. 180]
 joystickIds = ()
 joystickUids = ()
 joystickNames = ()
-
 
 
 controller = "keyboardandmouse"
@@ -251,6 +256,7 @@ if __name__ != "__mp_main__":
 
             joystick_value = Thread(target=self.joystick_thread)
             joystick_value.start()
+
 
             self.mqtt_flag = None
             self.mqtt_connected = False
@@ -414,11 +420,15 @@ if __name__ != "__mp_main__":
             ## ==> play sample voice line
             self.ui.voiceTestButton.clicked.connect(lambda: q.put('This is a test of the CamBot 6D audio feedback system.'))
 
-            self.ui.opentrackIPEdit.setText(QCoreApplication.translate("MainWindow", str(opentrack_ip), None))
-            self.ui.opentrackIPEdit.textChanged.connect(self.opentrack_ip_changed)
+            self.ui.remoteIPEdit.setText(QCoreApplication.translate("MainWindow", str(opentrack_ip), None))
+            self.ui.remoteIPEdit.textChanged.connect(self.opentrack_ip_changed)
 
-            self.ui.opentrackPortEdit.setText(QCoreApplication.translate("MainWindow", str(opentrack_port), None))
-            self.ui.opentrackPortEdit.textChanged.connect(self.opentrack_port_changed)
+            #self.ui.opentrackPortEdit.setText(QCoreApplication.translate("MainWindow", str(opentrack_port), None))
+            #self.ui.opentrackPortEdit.textChanged.connect(self.opentrack_port_changed)
+
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            self.ui.label_ip_info.setText(QCoreApplication.translate("MainWindow", str(local_ip), None))
 
             self.ui.MQTTIPEdit.setText(QCoreApplication.translate("MainWindow", str(mqtt_ip), None))
             self.ui.MQTTIPEdit.textChanged.connect(self.mqtt_ip_changed)
@@ -1001,28 +1011,33 @@ if __name__ != "__mp_main__":
             self.ui.MQTTTestButton.setText(QCoreApplication.translate("MainWindow", u" CONNECT TO BROKER", None))
             self.ui.MQTTTestButton.setEnabled(True)
 
+
+
         def joystick_thread(self):
 
+            global x
+            global y
+            global z
+            global yaw
+            global pitch
+            global roll
+            global controllerTest
+            global tts
+            global controllers_count
+            global joystickNames
+            global joystickUids
+            global joystickIds
+            global joystick
+            global gamepad
+
+            xboxone_sensitivity = 1
 
             while joystick_loop:
-                global x
-                global y
-                global z
-                global yaw
-                global pitch
-                global roll
-                global controllerTest
-                global tts
-                global controllers_count
-                global joystickNames
-                global joystickUids
-                global joystickIds
-                global joystick
-                global gamepad
 
                 controller_id = -1
 
-                time.sleep(0.005) #200 fps (ish)
+                time.sleep(0.005) #200 fps (ish) !!change this to proper 120 fps
+
 
                 try:
                     if controllers_count != pygame.joystick.get_count():
@@ -1037,8 +1052,9 @@ if __name__ != "__mp_main__":
                     print(message)
 
 
-
                 if controller == 'xboxone':
+
+                    #print('FreeTrack', TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z)
 
                     pygame.event.pump()
 
@@ -1055,23 +1071,64 @@ if __name__ != "__mp_main__":
                         if controller_id >= 0:
 
                             try:
-                                x = increment(x, - pygame.joystick.Joystick(controller_id).get_axis(0) - pygame.joystick.Joystick(controller_id).get_hat(0)[0]/4)
-                                z = increment(z, pygame.joystick.Joystick(controller_id).get_axis(1) - pygame.joystick.Joystick(controller_id).get_hat(0)[1]/4)
-                                y = increment(y, (pygame.joystick.Joystick(controller_id).get_axis(4)+1 - (pygame.joystick.Joystick(controller_id).get_axis(5)+1))/2)
-                                yaw = increment(yaw, pygame.joystick.Joystick(controller_id).get_axis(2))
-                                pitch = increment(pitch, pygame.joystick.Joystick(controller_id).get_axis(3))
 
-                                #x = increment(x, - pygame.joystick.Joystick(controller_id).get_hat(0)[0]/4)
-                                #z = increment(z, - pygame.joystick.Joystick(controller_id).get_hat(0)[1]/4)
+                                #absolute coordinates
+                                #x = increment(x, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1) - math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0)) * 100 * xboxone_sensitivity)
+                                #z = increment(z, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0) + math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1)) * 100 * xboxone_sensitivity)
+                                #y = increment(y, (pygame.joystick.Joystick(controller_id).get_axis(5)+1 - (pygame.joystick.Joystick(controller_id).get_axis(4)+1))/2 * 100 * xboxone_sensitivity)
 
+                                #yaw = increment(yaw, (- pygame.joystick.Joystick(controller_id).get_axis(2)) / 2 * xboxone_sensitivity)
+                                #pitch = increment(pitch, (- pygame.joystick.Joystick(controller_id).get_axis(3)) / 2 * xboxone_sensitivity)
+                                #if pygame.joystick.Joystick(controller_id).get_button(4):
+                                #    roll = roll + 0.0025 * xboxone_sensitivity
+                                #if pygame.joystick.Joystick(controller_id).get_button(5):
+                                #    roll = roll - 0.0025 * xboxone_sensitivity
 
+                                #relative coordinates
+                                x = increment(x, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1) - math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0)) * 100 * xboxone_sensitivity)
+                                z = increment(z, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0) + math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1)) * 100 * xboxone_sensitivity)
+                                y = increment(y, (pygame.joystick.Joystick(controller_id).get_axis(5)+1 - (pygame.joystick.Joystick(controller_id).get_axis(4)+1))/2 * 100 * xboxone_sensitivity)
+
+                                yaw = increment(yaw, (- pygame.joystick.Joystick(controller_id).get_axis(2)) / 2 * xboxone_sensitivity)
+                                pitch = increment(pitch, (- math.sin(roll) * pygame.joystick.Joystick(controller_id).get_axis(2) - math.cos(roll) * pygame.joystick.Joystick(controller_id).get_axis(3)) / 2 * xboxone_sensitivity)
+
+                                #if pitch is down, roll should be yaw
+                                roll = increment(roll, ( math.sin(pitch) * pygame.joystick.Joystick(controller_id).get_axis(2)) / 2 * xboxone_sensitivity)
                                 if pygame.joystick.Joystick(controller_id).get_button(4):
-                                    roll = roll + 0.005
-
+                                    roll = (roll + math.cos(pitch) * 0.0025 * xboxone_sensitivity)
+                                    yaw = (yaw + math.sin(pitch) * 0.0025 * xboxone_sensitivity)
                                 if pygame.joystick.Joystick(controller_id).get_button(5):
-                                    roll = roll - 0.005
+                                    roll = (roll - math.cos(pitch) * 0.0025 * xboxone_sensitivity)
+                                    yaw = (yaw - math.sin(pitch) * 0.0025 * xboxone_sensitivity)
+
+                                #print('yaw', yaw, 'pitch', pitch, 'roll', roll)
+
+                                #print('yaw',yaw,'x',x,'z',z)
+
+                                #wrap yaw/pitch/roll motions (should be an option)
+                                yaw = (yaw+math.pi)%(2*math.pi)-math.pi
+                                pitch = (pitch+math.pi)%(2*math.pi)-math.pi
+                                roll = (roll+math.pi)%(2*math.pi)-math.pi
+
+
+                                if abs(x) > 500 or abs(y) > 500 or abs(z) > 500 or abs(yaw) > math.pi or abs(pitch) > math.pi or abs(roll) > math.pi:
+                                     pygame.joystick.Joystick(controller_id).rumble(0, .5, 2)
+                                else:
+                                     pygame.joystick.Joystick(controller_id).stop_rumble()
+
 
                                 for event in pygame.event.get():
+                                    if event.type == pygame.JOYHATMOTION:
+                                        if pygame.joystick.Joystick(controller_id).get_hat(0)[1] == 1:
+                                            print('sensitivity up')
+                                            q.put('sensitivity up')
+                                            if not xboxone_sensitivity * math.sqrt(2) >= 16:
+                                                xboxone_sensitivity = xboxone_sensitivity * math.sqrt(2)
+                                        elif pygame.joystick.Joystick(controller_id).get_hat(0)[1] == -1:
+                                            print('sensitivity down')
+                                            q.put('sensitivity down')
+                                            if not xboxone_sensitivity / math.sqrt(2) <= 0.0625:
+                                                xboxone_sensitivity = xboxone_sensitivity / math.sqrt(2)
                                     if event.type == pygame.JOYBUTTONDOWN:
                                         if pygame.joystick.Joystick(controller_id).get_button(0):
                                             self.ui.pushButton_add_waypoint.click()
@@ -1138,7 +1195,10 @@ if __name__ != "__mp_main__":
                                 #raise SystemExit(message)
 
                 if controller == 'xboxone' or controller == 'spacemouse':
-                    self.F.updateOpenTrack(x,y,z,yaw,pitch,roll)
+
+                    self.F.updateFreeTrack(x,y,z,yaw,pitch,roll)
+
+
 
         ########################################################################
         ## MENUS ==> DYNAMIC MENUS FUNCTIONS
@@ -1231,7 +1291,7 @@ if __name__ != "__mp_main__":
             stop_joystick()
             self.stop_mqtt()
             stop_tts()
-            self.F.stop_opentrack()
+            self.F.stop_freetrack()
             self.F.stop_hotkey()
             print('closing')
 
@@ -1291,6 +1351,7 @@ def restart_tts(voice,rate,volume):
 #    if not joystick_value.is_alive():
 #        joystick_value = Thread(target=joystick_thread, args=("Thread",))
 #        joystick_value.start()
+
 
 def stop_joystick():
     global joystick_loop
