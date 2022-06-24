@@ -233,7 +233,7 @@ if __name__ != "__mp_main__":
             global voice_enable
             global joystick_value
 
-            F = Functions(self, UIFunctions)
+
 
             # Close the splash screen. It does not matter when the call
             # to this function is made, the splash screen remains open until
@@ -252,6 +252,7 @@ if __name__ != "__mp_main__":
             QMainWindow.__init__(self)
             self.ui = Ui_MainWindow()
             self.ui.setupUi(self)
+            F = Functions(self, UIFunctions, self.ui)
             self.F = F
 
             joystick_value = Thread(target=self.joystick_thread)

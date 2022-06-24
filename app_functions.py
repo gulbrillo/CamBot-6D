@@ -14,6 +14,8 @@ import XInput
 import windows
 import win32event
 
+version = "v0.4.1"
+
 @dataclass
 class FT_SharedMem:
     DataID: int
@@ -56,6 +58,7 @@ class Functions(MainWindow):
 
     print('CONNECTED', XInput.get_connected())
 
+
     def wait_for_hotkey_thread(self, threadname):
         print('[ALT]+[Num+] hotkey registration')
         ctypes.windll.user32.RegisterHotKey(None, 1, win32con.MOD_ALT, win32con.VK_ADD)
@@ -74,6 +77,10 @@ class Functions(MainWindow):
             print('hotkey FAILED')
 
     def send_to_freetrack_thread(self, threadname):
+
+        GameID2 = -1
+        error = False
+        write = False
 
         loop_delta = 1./self.fps
         current_time = target_time = time.perf_counter()
@@ -116,6 +123,9 @@ class Functions(MainWindow):
             data = struct.unpack('Iiiffffffffffffffffffffiiii', mmap_sharedmem)
 
             TFreeTrackData = FT_SharedMem(*data)
+
+            #print (TFreeTrackData.GameID, TFreeTrackData.table_ints_1, TFreeTrackData.table_ints_2, TFreeTrackData.GameID2)
+
             TFreeTrackData.DataID = TFreeTrackData.DataID + 1
             TFreeTrackData.CamWidth = 100
             TFreeTrackData.CamHeight = 250
@@ -132,21 +142,53 @@ class Functions(MainWindow):
             #717;Star Citizen;FreeTrack20;V170;;;3450;02CDF4CE4E343EC6B4A200
             #3450 -187806156 1053209762 3450
 
-            #set GameID2 == GameID if Star Citizen is launched
-            GameID = TFreeTrackData.GameID2
+
             GameInt1 = TFreeTrackData.table_ints_1
             GameInt2 = TFreeTrackData.table_ints_2
-            if TFreeTrackData.GameID != TFreeTrackData.GameID2:
-                if TFreeTrackData.GameID == 3450:
-                    GameID = 3450
+
+            if GameID2 == -1:
+                #print('FIRST LAUNCH =====', TFreeTrackData.GameID, TFreeTrackData.GameID2)
+                #on launch (GameID == -1), if Star Citizen is already running but GameID2 is wrong, Star Citizen was launched before CamBot 6D
+                if TFreeTrackData.GameID == 3450 and TFreeTrackData.GameID2 != 3450:
+                    self.ui.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://github.com/thelordskippy/CamBot6D/releases\">" + version + "</a> &ndash; <span style=\"text-decoration: none; color: #E57373;\">connection error</span>", None))
+                    self.ui.label_version.setToolTip(u"start CamBot 6D before Star Citizen - please close and try again")
+                    error = True
+                elif TFreeTrackData.GameID == 3450 and TFreeTrackData.GameID2 == 3450: #was already connected before and we should be still good to go after CamBot6D restarted
+                    self.ui.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://github.com/thelordskippy/CamBot6D/releases\">" + version + "</a> &ndash; <span style=\"text-decoration: none; color: #4CAF50;\">connected</span>", None))
+                    self.ui.label_version.setToolTip(u"please toggle 3rd Person Camera head tracking on")
                     GameInt1 = -187806156
                     GameInt2 = 1053209762
+                    write = True
 
-            #print (TFreeTrackData.GameID, TFreeTrackData.table_ints_1, TFreeTrackData.table_ints_2, TFreeTrackData.GameID2)
+            GameID2 = TFreeTrackData.GameID2
 
-            data = struct.pack('Iiiffffffffffffffffffffiiii', TFreeTrackData.DataID, TFreeTrackData.CamWidth, TFreeTrackData.CamHeight, TFreeTrackData.Yaw, TFreeTrackData.Pitch, TFreeTrackData.Roll, TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, TFreeTrackData.GameID, GameInt1, GameInt2, GameID )
-            mmap_sharedmem.seek(0)
-            mmap_sharedmem.write(data)
+            #set GameID2 == GameID if Star Citizen is launched
+            if TFreeTrackData.GameID != TFreeTrackData.GameID2 and error != True:
+                if TFreeTrackData.GameID == 3450:
+                    write = True
+                    GameID2 = 3450
+                    GameInt1 = -187806156
+                    GameInt2 = 1053209762
+                    self.ui.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://github.com/thelordskippy/CamBot6D/releases\">" + version + "</a> &ndash; <span style=\"text-decoration: none; color: #4CAF50;\">connected</span>", None))
+                    self.ui.label_version.setToolTip(u"please toggle 3rd Person Camera head tracking on")
+                else:
+                    write = False
+                    GameID2 = TFreeTrackData.GameID
+                    GameInt1 = 0
+                    GameInt2 = 0
+                    data = struct.pack('i', GameID2 )
+                    mmap_sharedmem.seek(ft_heap_bytes - 4)
+                    mmap_sharedmem.write(data)
+                    self.ui.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://github.com/thelordskippy/CamBot6D/releases\">" + version + "</a> &ndash; <span style=\"text-decoration: none; color: #62676f;\">disconnected</span>", None))
+                    self.ui.label_version.setToolTip(u"please launch Star Citizen")
+
+            if write == True:
+                data = struct.pack('Iiiffffff', TFreeTrackData.DataID, TFreeTrackData.CamWidth, TFreeTrackData.CamHeight, TFreeTrackData.Yaw, TFreeTrackData.Pitch, TFreeTrackData.Roll, TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z)
+                mmap_sharedmem.seek(0)
+                mmap_sharedmem.write(data)
+                data = struct.pack('iii', GameInt1, GameInt2, GameID2 )
+                mmap_sharedmem.seek(ft_heap_bytes - 3*4)
+                mmap_sharedmem.write(data)
 
 
             #self.fps rate limit
@@ -156,17 +198,27 @@ class Functions(MainWindow):
                 time.sleep(sleep_time)
 
         #set everything to zero on exit
-        GameID = 0
-        data = struct.pack('Iiiffffffffffffffffffffiiii', 0, 0, 0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, 0, 0, 0, 0 )
-        mmap_sharedmem.seek(0)
-        mmap_sharedmem.write(data)
+        #except for star citizen game ids
+        if write == True:
+            data = struct.pack('Iiiffffff', 0, 0, 0, .0, .0, .0, .0, .0, .0 )
+            mmap_sharedmem.seek(0)
+            mmap_sharedmem.write(data)
+            data = struct.pack('ii', 0, 0 )
+            mmap_sharedmem.seek(ft_heap_bytes - 3*4)
+            mmap_sharedmem.write(data)
 
 
-    def __init__(self, window, UIFunctions):
+    def __init__(self, window, UIFunctions, UI):
+
+        self.window = window
 
         self.UIFunctions = UIFunctions
 
-        self.window = window
+        self.ui = UI
+
+        self.ui.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://github.com/thelordskippy/CamBot6D/releases\">" + version + "</a> &ndash; <span style=\"text-decoration: none; color: #62676f;\">disconnected</span>", None))
+
+
         #self.clock = pygame.time.clock()
 
         self.mouse = Controller()

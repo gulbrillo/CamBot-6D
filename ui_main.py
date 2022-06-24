@@ -3032,10 +3032,11 @@ class Ui_MainWindow(object):
         self.label_version.setObjectName(u"label_version")
         self.label_version.setTextFormat(Qt.RichText)
         self.label_version.setOpenExternalLinks(True)
-        self.label_version.setMaximumSize(QSize(100, 16777215))
+        self.label_version.setMaximumSize(QSize(300, 16777215))
         self.label_version.setFont(font2)
         self.label_version.setStyleSheet(u"color: rgb(98, 103, 111);")
         self.label_version.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_version.setToolTip(u"please launch Star Citizen")
 
         self.horizontalLayout_7.addWidget(self.label_version)
 
@@ -3105,7 +3106,7 @@ class Ui_MainWindow(object):
         self.label_top_info_2.setText(QCoreApplication.translate("MainWindow", u"| CAMERA", None))
         self.label_user_icon.setText(QCoreApplication.translate("MainWindow", u"WM", None))
 
-        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need to:<p><p style=\"margin: 0; margin-top: 5px;\">1) Start <a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/lordskippy/CamBot6D\"><strong>CamBot 6D</strong></a> on your Gaming PC before running Star Citizen</p><p style=\"margin: 0; margin-top: 3px;\">2) Launch <a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> and change the following settings</p><p style=\"margin: 0; margin-left: 10px;\">- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ]<br/>- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Toggle Enabled' = [ <strong>No</strong> ]<br/>- 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking' → 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ]</p><p style=\"margin: 0;\">3) Press <strong>F4</strong> to enter 3rd Person Camera and <strong>Left Shift + Numpad /</strong> to toggle head tracking on and off</p>", None))
+        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need to:<p><p style=\"margin: 0; margin-top: 5px;\">1) Start <a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/thelordskippy/CamBot6D\"><strong>CamBot 6D</strong></a> on your Gaming PC before running Star Citizen</p><p style=\"margin: 0; margin-top: 3px;\">2) Launch <a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> and change the following settings</p><p style=\"margin: 0; margin-left: 10px;\">- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ]<br/>- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Toggle Enabled' = [ <strong>No</strong> ]<br/>- 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking' → 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ]</p><p style=\"margin: 0;\">3) Press <strong>F4</strong> to enter 3rd Person Camera and <strong>Left Shift + Numpad /</strong> to toggle head tracking on and off</p>", None))
 
 
         self.pushButton_add_waypoint.setText(QCoreApplication.translate("MainWindow", u" ADD WAYPOINT", None))
@@ -3203,5 +3204,5 @@ class Ui_MainWindow(object):
         self.tableWidget.setSortingEnabled(__sortingEnabled)
 
         self.label_credits.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://robertsspaceindustries.com/citizens/LordSkippy\">by /citizens/LordSkippy</a>", None))
-        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<a style=\"text-decoration: none; color: #62676f;\" href=\"https://www.lordskippy.com/software/virtual-camera-robot#h.nrhw9hcv3l2i\">v0.4.0</a>", None))
+        self.label_version.setText(QCoreApplication.translate("MainWindow", u"<span style=\"text-decoration: none; color: #62676f;\">disconnected</span>", None))
     # retranslateUi
