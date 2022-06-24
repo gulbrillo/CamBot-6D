@@ -78,88 +78,16 @@ class Functions(MainWindow):
         loop_delta = 1./self.fps
         current_time = target_time = time.perf_counter()
 
-        ft_SharedMem_bytes = 92
-        ft_heap_bytes = 92 + 4 + 8 + 4
-
-        # structure of mmap_mutex
-        # typedef struct FTHeap__ {
-        #     FTData data;
-        #     int32_t GameID;
-        #     union
-        #     {
-        #         unsigned char table[8];
-        #         int32_t table_ints[2];
-        #     };
-        #     int32_t GameID2;
-        # } volatile FTHeap;
+        ft_heap_bytes = 108
 
         #try:
         #create Non-Persisted Memory-Mapped File
         mmap_sharedmem = mmap.mmap(-1, ft_heap_bytes, 'FT_SharedMem', access=mmap.ACCESS_DEFAULT,offset=0)
         #print('MMAP', mmap_sharedmem)
 
-#####
-        """
-        PAGE_READWRITE = 0x04
-        CreateFileMappingA = ctypes.windll.kernel32.CreateFileMappingA
-        CreateFileMappingA.argtypes = [ctypes.wintypes.HANDLE, ctypes.c_void_p, ctypes.wintypes.DWORD, ctypes.wintypes.DWORD, ctypes.wintypes.DWORD, ctypes.wintypes.LPCSTR]
-        mmap_sharedmem_windll = CreateFileMappingA(-1, None, PAGE_READWRITE, 0, ft_SharedMem_bytes, b'FT_SharedMem')
-        if (mmap_sharedmem_windll == 0):
-            raise ctypes.WinError()
-        print('MMAP_DLL', mmap_sharedmem_windll)
-
-
-        #create ipc_heap
-        FILE_MAP_WRITE = 2
-        MapViewOfFile = ctypes.windll.kernel32.MapViewOfFile
-        MapViewOfFile.restype = ctypes.POINTER(ctypes.c_char)
-        ipc_heap = MapViewOfFile(mmap_sharedmem_windll, FILE_MAP_WRITE, 0, 0, ft_heap_bytes)
-        if ipc_heap == 0:
-            raise ctypes.WinError()
-
-        #create ipc_mutex
-        ipc_mutex = ctypes.windll.kernel32.CreateMutexA(None, False, 'FT_SharedMem')
-        if (ipc_mutex == 0):
-            raise ctypes.WinError()
-        print(ipc_mutex)
-
-        #except Exception as e:
-        #    print('ERROR', e)
-        """
-#####
-
         while self.sendToFreeTrack:
 
-#            try:
-#                with mmap.mmap(-1, ft_heap_bytes, 'FT_SharedMem', access=mmap.ACCESS_DEFAULT,offset=0) as mmap_mutex:
-#                    print(mmap_mutex.read())
-#            except Exception as e:
-#                print('ERROR', e)
 
-#####
-
-            #get data from ipc_mutex
-#            if ipc_mutex:
-#                wait_result = win32event.WaitForSingleObject(ipc_mutex, 16)
-#                if (wait_result == win32event.WAIT_OBJECT_0):
-                    #print(ipc_heap)
-                    #data = struct.unpack('Iiiffffffffffffffffffffiiii', ipc_heap)
-                    #pBuf_str = ctypes.cast(ipc_heap, ctypes.c_char_p)
-                    #print(pBuf_str.value)
-#                    print(ctypes.string_at(ipc_heap))
-#                    ctypes.windll.kernel32.ReleaseMutex(ipc_mutex)
-                    #print(len(ipc_heap))
-            #    shmem.write(szMsg1)
-            #    while (shmem.tell() != SHMEMSIZE):
-            #        shmem.write_byte(" ")
-            #    shmem.seek(0)
-            #    print "WROTE in FIRST process: ", szMsg1
-            #    win32event.ReleaseMutex(hMutex)
-
-            #getGameData
-            #717;Star Citizen;FreeTrack20;V170;;;3450;02CDF4CE4E343EC6B4A200
-
-#####
 
             previous_time, current_time = current_time, time.perf_counter()
             time_delta = current_time - previous_time
@@ -199,24 +127,6 @@ class Functions(MainWindow):
             TFreeTrackData.Pitch = position[4]
             TFreeTrackData.Roll = position[5]
 
-            """
-            TFreeTrackData.RawYaw = position[0]
-            TFreeTrackData.RawPitch = position[1]
-            TFreeTrackData.RawRoll = position[2]
-            TFreeTrackData.RawX = position[3]
-            TFreeTrackData.RawY = position[4]
-            TFreeTrackData.RawZ = position[5]
-
-
-
-            TFreeTrackData.X1 = 100.
-            TFreeTrackData.Y1 = 200.
-            TFreeTrackData.X2 = 300.
-            TFreeTrackData.Y2 = 200.
-            TFreeTrackData.X3 = 300.
-            TFreeTrackData.Y3 = 100.
-            """
-
             #STAR CITIZEN
             #No;Game Name;Game protocol;Supported since;Verified;By;INTERNATIONAL_ID;FTN_ID
             #717;Star Citizen;FreeTrack20;V170;;;3450;02CDF4CE4E343EC6B4A200
@@ -231,10 +141,8 @@ class Functions(MainWindow):
                     GameID = 3450
                     GameInt1 = -187806156
                     GameInt2 = 1053209762
-                if TFreeTrackData.GameID == 1901:
-                    GameID = 1901
 
-            print (TFreeTrackData.GameID, TFreeTrackData.table_ints_1, TFreeTrackData.table_ints_2, TFreeTrackData.GameID2)
+            #print (TFreeTrackData.GameID, TFreeTrackData.table_ints_1, TFreeTrackData.table_ints_2, TFreeTrackData.GameID2)
 
             data = struct.pack('Iiiffffffffffffffffffffiiii', TFreeTrackData.DataID, TFreeTrackData.CamWidth, TFreeTrackData.CamHeight, TFreeTrackData.Yaw, TFreeTrackData.Pitch, TFreeTrackData.Roll, TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, TFreeTrackData.GameID, GameInt1, GameInt2, GameID )
             mmap_sharedmem.seek(0)
@@ -246,10 +154,6 @@ class Functions(MainWindow):
             sleep_time = target_time - time.perf_counter()
             if sleep_time > 0:
                 time.sleep(sleep_time)
-
-                #120 fps minus 0.5 milliseconds (time for the loop to execute, rought guess)
-                #time.sleep(1/self.fps - 0.0005) #delay for one frame at self.fps (might execute slightly slower: 8 ms + loop time of 0.5 ms - hence subtraction of 0.5ms)
-                #self.clock.tick_busy_loop(self.fps) #max FPS - but 6.5% CPU usage
 
         #set everything to zero on exit
         GameID = 0
