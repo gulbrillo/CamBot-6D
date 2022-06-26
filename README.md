@@ -4,7 +4,7 @@
 
 CamBot 6D can remotely control the in-game camera position and orientation in all six degrees of freedom. Simply set individual waypoints and the software will move the in-game camera along a smooth path at a predefined speed.
 
-You can also use CamBot 6D to split the advanced camera controls of Star Citizen between two real-time operators. One operator will control the camera angle around its pivot directly at the gaming PC, while the other controls the relative camera position and orientation remotely from a second computer.
+You can also use CamBot 6D to split the advanced camera controls of Star Citizen between two real-time operators. One operator will control the camera angle around its pivot directly at the gaming PC (or control a character with fixed camera settings) while the other controls the relative camera position and orientation offsets remotely from a second computer.
 
 # Features
 
