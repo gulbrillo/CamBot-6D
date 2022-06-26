@@ -1209,7 +1209,7 @@ class Ui_MainWindow(object):
         self.temporalInterpolationSelection.addItem("")
         self.temporalInterpolationSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Isochronous", None))
         self.temporalInterpolationSelection.addItem("")
-        self.temporalInterpolationSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Constant", None))
+        self.temporalInterpolationSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Manual", None))
 
         self.verticalLayout_M2a.addWidget(self.temporalInterpolationSelection, 4, 1, 1, 1)
 
@@ -1928,7 +1928,8 @@ class Ui_MainWindow(object):
         self.controllerTestButton = QPushButton(self.frame_content_wid_C1)
         self.controllerTestButton.setObjectName(u"controllerTestButton")
         self.controllerTestButton.setMinimumSize(QSize(50, 30))
-
+        self.controllerTestButton.setEnabled(False)
+        self.controllerTestButton.setVisible(False)
         self.controllerTestButton.setFont(font8)
         self.controllerTestButton.setStyleSheet(u"QPushButton {\n"
 "	margin-left: 5px;\n"
@@ -1964,12 +1965,13 @@ class Ui_MainWindow(object):
         self.frame_3.setFrameShape(QFrame.NoFrame)
         self.frame_3.setFrameShadow(QFrame.Raised)
 
-        self.horizontalLayout_12 = QVBoxLayout(self.frame_3)
+        self.horizontalLayout_12 = QGridLayout(self.frame_3)
         self.horizontalLayout_12.setSpacing(0)
         self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
         self.horizontalLayout_12.setContentsMargins(0, 0, 0, 0)
 
         self.tableWidget = QTableWidget(self.frame_3)
+        self.tableWidget.setVisible(False)
         if (self.tableWidget.columnCount() < 6):
             self.tableWidget.setColumnCount(6)
         __qtablewidgetitemH1 = QTableWidgetItem()
@@ -2144,7 +2146,19 @@ class Ui_MainWindow(object):
         self.tableWidget.verticalHeader().setHighlightSections(False)
         self.tableWidget.verticalHeader().setStretchLastSection(True)
 
-        self.horizontalLayout_12.addWidget(self.tableWidget)
+        self.horizontalLayout_12.addWidget(self.tableWidget, 0, 0, 1, 1)
+
+        self.labelStreamDeck = QLabel(self.frame_div_table_widget_M1)
+        self.labelStreamDeck.setVisible(True)
+        self.labelStreamDeck.setObjectName(u"labelStreamDeck")
+        self.labelStreamDeck.setStyleSheet(u"margin-left: 10px; margin-right: 10px; margin-bottom: 10px; color: rgb(98, 103, 111);")
+        self.labelStreamDeck.setTextFormat(Qt.RichText)
+        self.labelStreamDeck.setOpenExternalLinks(True)
+        self.labelStreamDeck.setWordWrap(True)
+        self.labelStreamDeck.setMinimumSize(QSize(0, 89))
+        self.labelStreamDeck.setMaximumSize(QSize(16777215, 89))
+
+        self.horizontalLayout_12.addWidget(self.labelStreamDeck, 1, 0, 1, 1)
 
         self.verticalLayout_C7.addWidget(self.frame_3)
 
@@ -2191,28 +2205,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_C37.setObjectName(u"verticalLayout_7")
         self.verticalLayout_C37.setContentsMargins(0, 0, 0, 0)
 
-        self.frame_title_wid_C31 = QFrame(self.frame_div_content_C31)
-        self.frame_title_wid_C31.setObjectName(u"frame_title_wid_C31")
-        self.frame_title_wid_C31.setMaximumSize(QSize(16777215, 35))
-        self.frame_title_wid_C31.setStyleSheet(u"background-color: rgb(41, 46, 57);")
-        self.frame_title_wid_C31.setFrameShape(QFrame.StyledPanel)
-        self.frame_title_wid_C31.setFrameShadow(QFrame.Raised)
-
-##
-
-        self.verticalLayout_C38 = QVBoxLayout(self.frame_title_wid_C31)
-        self.verticalLayout_C38.setObjectName(u"verticalLayout_C38")
-        self.labelBoxControllerCustomization = QLabel(self.frame_title_wid_C31)
-        self.labelBoxControllerCustomization.setObjectName(u"labelBoxControllerCustomization")
-        self.labelBoxControllerCustomization.setFont(font1)
-        self.labelBoxControllerCustomization.setStyleSheet(u"")
-
-        self.verticalLayout_C38.addWidget(self.labelBoxControllerCustomization)
-
-
-        self.verticalLayout_C37.addWidget(self.frame_title_wid_C31)
-
-##
+###
 
         self.frame_content_wid_C31 = QFrame(self.frame_div_content_C31)
         self.frame_content_wid_C31.setObjectName(u"frame_content_wid_C31")
@@ -2222,29 +2215,130 @@ class Ui_MainWindow(object):
         self.horizontalLayout_C39.setObjectName(u"horizontalLayout_C39")
 
         self.gridLayout_C31 = QGridLayout()
+        self.verticalLayout_C37.setSpacing(0)
         self.gridLayout_C31.setObjectName(u"gridLayout_C31")
         self.gridLayout_C31.setContentsMargins(-1, -1, -1, 0)
 
-        self.invertRollCheckBox = QCheckBox(self.frame_content_wid_C31)
-        self.invertRollCheckBox.setObjectName(u"checkBox")
-        self.invertRollCheckBox.setAutoFillBackground(False)
-        self.invertRollCheckBox.setStyleSheet(u"")
+        self.labelBoxControllerCustomization = QLabel(self.frame_content_wid_C31)
+        self.labelBoxControllerCustomization.setObjectName(u"labelBoxControllerCustomization")
+        self.labelBoxControllerCustomization.setFont(font1)
+        self.labelBoxControllerCustomization.setMaximumSize(QSize(16777215, 17))
+        self.labelBoxControllerCustomization.setStyleSheet(u"margin-bottom:5px;")
 
-        self.gridLayout_C31.addWidget(self.invertRollCheckBox, 0, 0, 1, 1)
+        self.gridLayout_C31.addWidget(self.labelBoxControllerCustomization, 0, 0, 1, 1)
+
+
+
+
+
 
         self.invertPitchCheckBox = QCheckBox(self.frame_content_wid_C31)
         self.invertPitchCheckBox.setObjectName(u"checkBox")
         self.invertPitchCheckBox.setAutoFillBackground(False)
-        self.invertPitchCheckBox.setStyleSheet(u"")
+        self.invertPitchCheckBox.setStyleSheet(u"margin-left:3px;")
 
         self.gridLayout_C31.addWidget(self.invertPitchCheckBox, 1, 0, 1, 1)
 
         self.invertYawCheckBox = QCheckBox(self.frame_content_wid_C31)
         self.invertYawCheckBox.setObjectName(u"checkBox")
         self.invertYawCheckBox.setAutoFillBackground(False)
-        self.invertYawCheckBox.setStyleSheet(u"")
+        self.invertYawCheckBox.setStyleSheet(u"margin-left:3px;")
 
         self.gridLayout_C31.addWidget(self.invertYawCheckBox, 2, 0, 1, 1)
+
+        self.invertRollCheckBox = QCheckBox(self.frame_content_wid_C31)
+        self.invertRollCheckBox.setObjectName(u"checkBox")
+        self.invertRollCheckBox.setAutoFillBackground(False)
+        self.invertRollCheckBox.setStyleSheet(u"margin-left:3px;")
+
+        self.gridLayout_C31.addWidget(self.invertRollCheckBox, 3, 0, 1, 1)
+
+
+        self.labelBoxController2Customization = QLabel(self.frame_content_wid_C31)
+        self.labelBoxController2Customization.setObjectName(u"labelBoxController2Customization")
+        self.labelBoxController2Customization.setFont(font1)
+        self.labelBoxController2Customization.setMaximumSize(QSize(16777215, 17))
+        self.labelBoxController2Customization.setStyleSheet(u"margin-bottom:5px;")
+
+        self.gridLayout_C31.addWidget(self.labelBoxController2Customization, 0, 1, 1, 1)
+
+        self.wrapRotationCheckBox = QCheckBox(self.frame_content_wid_C31)
+        self.wrapRotationCheckBox.setObjectName(u"checkBox")
+        self.wrapRotationCheckBox.setAutoFillBackground(False)
+        self.wrapRotationCheckBox.setStyleSheet(u"margin-left:3px;")
+        self.wrapRotationCheckBox.setMinimumSize(QSize(100, 25))
+        self.wrapRotationCheckBox.setMaximumSize(QSize(16777215, 25))
+        self.gridLayout_C31.addWidget(self.wrapRotationCheckBox, 1, 1, 1, 1)
+
+
+        self.label_translation_info = QLabel(self.frame_content_wid_C31)
+        self.label_translation_info.setWordWrap(True)
+        self.label_translation_info.setMargin(0)
+        self.label_translation_info.setAlignment(Qt.AlignBottom)
+        self.label_translation_info.setObjectName(u"label_translation_info")
+        self.label_translation_info.setMinimumSize(QSize(100, 25))
+        self.label_translation_info.setMaximumSize(QSize(16777215, 25))
+        font2 = QFont()
+        font2.setFamily(u"Segoe UI")
+        self.label_translation_info.setFont(font2)
+        self.label_translation_info.setStyleSheet(u"color: rgb(98, 103, 111); ")
+
+        self.gridLayout_C31.addWidget(self.label_translation_info, 2, 1, 1, 1)
+
+
+        self.motionSelection = QComboBox(self.frame_content_wid_C31)
+        self.motionSelection.setObjectName(u"comboBox")
+        self.motionSelection.setFont(font8)
+        self.motionSelection.setAutoFillBackground(False)
+        self.motionSelection.setMinimumSize(QSize(100, 25))
+        self.motionSelection.setMaximumSize(QSize(16777215, 25))
+        self.motionSelection.setStyleSheet(u"QComboBox{\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding: 5px;\n"
+"	padding-left: 10px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QComboBox QAbstractItemView {\n"
+"	color: rgb(85, 170, 255);	\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	padding: 10px;\n"
+"	selection-background-color: rgb(39, 44, 54);\n"
+"}")
+        self.motionSelection.setIconSize(QSize(16, 16))
+        self.motionSelection.setFrame(True)
+
+        self.motionSelection.addItem("")
+        self.motionSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"Absolute coordinates", None))
+        self.motionSelection.addItem("")
+        self.motionSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Relative coordinates", None))
+
+
+        self.gridLayout_C31.addWidget(self.motionSelection, 3, 1, 1, 1)
+
+
+
+
+        self.keyMapImage = QPushButton(self.frame_content_wid_C31)
+        self.keyMapImage.setObjectName(u"keyMapImage")
+        self.keyMapImage.setMinimumSize(QSize(330, 115))
+        self.keyMapImage.setMaximumSize(QSize(330, 115))
+        font8a = QFont()
+        font8a.setFamily(u"Segoe UI")
+        font8a.setPointSize(9)
+        self.keyMapImage.setFont(font8a)
+        self.keyMapImage.setStyleSheet(u"QPushButton {\n"
+"	background-color: rgb(41, 46, 57);\n"
+"	border-radius: 0px;	\n"
+"	background-image: url(images/keyboard-map.png);\n"
+"}")
+
+        self.gridLayout_C31.addWidget(self.keyMapImage, 0, 2, 4, 1)
+
+
 
         self.horizontalLayout_C39.addLayout(self.gridLayout_C31)
         self.verticalLayout_C37.addWidget(self.frame_content_wid_C31)
@@ -3106,7 +3200,7 @@ class Ui_MainWindow(object):
         self.label_top_info_2.setText(QCoreApplication.translate("MainWindow", u"| CAMERA", None))
         self.label_user_icon.setText(QCoreApplication.translate("MainWindow", u"WM", None))
 
-        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need to:<p><p style=\"margin: 0; margin-top: 5px;\">1) Start <a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/thelordskippy/CamBot6D\"><strong>CamBot 6D</strong></a> on your Gaming PC before running Star Citizen</p><p style=\"margin: 0; margin-top: 3px;\">2) Launch <a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> and change the following settings</p><p style=\"margin: 0; margin-left: 10px;\">- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ]<br/>- 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Toggle Enabled' = [ <strong>No</strong> ]<br/>- 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking' → 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ]</p><p style=\"margin: 0;\">3) Press <strong>F4</strong> to enter 3rd Person Camera and <strong>Left Shift + Numpad /</strong> to toggle head tracking on and off</p>", None))
+        self.label_help_info.setText(QCoreApplication.translate("MainWindow", u"<p style=\"margin: 0;\">For any of this to work, you need to:<p><p style=\"margin: 0; margin-top: 5px;\"><strong style=\"color: #d2d2d2;\">1)</strong> Start <a style=\"color: #d2d2d2; text-decoration: none;\" href=\"https://github.com/thelordskippy/CamBot6D\"><strong>CamBot 6D</strong></a> on your Gaming PC before running Star Citizen</p><p style=\"margin: 0; margin-top: 3px;\"><strong style=\"color: #d2d2d2;\">2)</strong> Launch <a style=\"color: #d2d2d2;  text-decoration: none;\" href=\"https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD\"><strong>Star Citizen</strong></a> and change the following settings</p><p style=\"margin: 0; margin-left: 13px;\">● 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Source' = [ <strong>TrackIR</strong> ]<br/>● 'COMMS, FOIP & HEADTRACKING' → 'Head Tracking' → 'General' → 'Toggle Enabled' = [ <strong>No</strong> ]<br/>● 'KEYBINDINGS' → 'Keyboard / Mouse' → 'ADVANCED CONTROLS CUSTOMIZATION' → 'VOIP, FOIP and Head Tracking'<br/>&nbsp;&nbsp;&nbsp;&nbsp;→ 'Enable / Disable Head Tracking for 3rd Person Camera (Toggle)' = [ <strong>Left Shift + Numpad /</strong> ]</p><p style=\"margin: 0;\"><strong style=\"color: #d2d2d2;\">3)</strong> Press <strong style=\"color: #d2d2d2;\">F4</strong> to enter 3rd Person Camera and <strong style=\"color: #d2d2d2;\">Left Shift + Numpad /</strong> to toggle head tracking on and off</p>", None))
 
 
         self.pushButton_add_waypoint.setText(QCoreApplication.translate("MainWindow", u" ADD WAYPOINT", None))
@@ -3127,13 +3221,14 @@ class Ui_MainWindow(object):
         self.labelBoxVoiceSettings.setText(QCoreApplication.translate("MainWindow", u"VOICE OUTPUT", None))
         self.labelBoxMQTTSettings.setText(QCoreApplication.translate("MainWindow", u"MQTT REMOTE", None))
         self.labelBoxGeneralSettings.setText(QCoreApplication.translate("MainWindow", u"GENERAL", None))
-        self.labelBoxControllerCustomization.setText(QCoreApplication.translate("MainWindow", u"CUSTOMIZATION", None))
+        self.labelBoxControllerCustomization.setText(QCoreApplication.translate("MainWindow", u"AXIS", None))
+        self.labelBoxController2Customization.setText(QCoreApplication.translate("MainWindow", u"MOTION", None))
 
         self.labelBoxGeneralSettings.setText(QCoreApplication.translate("MainWindow", u"GENERAL", None))
         self.labelBoxGeneralSettings.setText(QCoreApplication.translate("MainWindow", u"GENERAL", None))
 
         self.labelBoxResources.setText(QCoreApplication.translate("MainWindow", u"ONLINE RESOURCES", None))
-        self.label_resources_info.setText(QCoreApplication.translate("MainWindow", u"CamBot 6D was developed by LordSkippy.com &ndash; subscribe to my <a style=\"color: white;\" href=\"https://www.youtube.com/LordSkippyTheMeh?sub_confirmation=1\"><strong>YouTube channel</strong></a> for news and updates.</p><p>Documentation</p><p>Installation instructions</p><p>MQTT API commands</p><p>Source code</p><p>Issue council</p>", None))
+        self.label_resources_info.setText(QCoreApplication.translate("MainWindow", u"CamBot 6D was developed by LordSkippy.com &ndash; subscribe to my <a style=\"color: #d2d2d2;\" href=\"https://www.youtube.com/LordSkippyTheMeh?sub_confirmation=1\"><strong>YouTube channel</strong></a> for news and updates.</p><p>Documentation</p><p>Installation instructions</p><p>MQTT API commands</p><p>Source code</p><p>Issue council</p>", None))
 
         self.labelBoxLicense.setText(QCoreApplication.translate("MainWindow", u"DISTRIBUTED UNDER MIT LICENSE", None))
         self.label_license_info.setText(QCoreApplication.translate("MainWindow", u"<strong>Copyright © 2020 Wanderson M. Pimenta<br/>Copyright © 2022 Simon F. Barke</strong><p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p><p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p><p>THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>", None))
@@ -3169,8 +3264,11 @@ class Ui_MainWindow(object):
         self.invertRollCheckBox.setText(QCoreApplication.translate("MainWindow", u" Invert roll axis", None))
         self.invertPitchCheckBox.setText(QCoreApplication.translate("MainWindow", u" Invert pitch axis", None))
         self.invertYawCheckBox.setText(QCoreApplication.translate("MainWindow", u" Invert yaw axis", None))
+        self.wrapRotationCheckBox.setText(QCoreApplication.translate("MainWindow", u" Wrap rotation", None))
+        self.label_translation_info.setText(QCoreApplication.translate("MainWindow", u" X/Y translation:", None))
 
 
+        self.labelStreamDeck.setText(QCoreApplication.translate("MainWindow",  u"<p style=\"font-weight:bold; font-size:10pt; color:#d2d2d2; margin-bottom: 5px;\">STREAM DECK SUPPORT</p>You can access most functions of CamBot 6D easily though an Elgato Stream Deck without leaving Star Citizen. This is especially useful for 'Keyboard & Mouse' or 'SpaceMouse' controls. While there is no native plugin (yet), you can implement Stream Deck controls via the MQTT messaging protocol. Please check out this <a style=\"color: #d2d2d2; text-decoration: none;\" href=\https://www.lordskippy.com/software/virtual-camera-robot/mqtt-api\"><strong>tutorial</strong></a> for more information.", None))
 
         ___qtablewidgetitemH1 = self.tableWidget.horizontalHeaderItem(0)
         ___qtablewidgetitemH1.setText(QCoreApplication.translate("MainWindow", u"X", None));

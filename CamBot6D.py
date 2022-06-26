@@ -55,8 +55,7 @@ if __name__ != "__mp_main__":
 
 try:
     # Update the text on the splash screen
-    pyi_splash.update_text("PyInstaller is a great software!")
-    pyi_splash.update_text("Second time's a charm!")
+    pyi_splash.update_text("Opening GUI")
     # Close the splash screen. It does not matter when the call
     # to this function is made, the splash screen remains open until
     # this function is called or the Python program is terminated.
@@ -92,8 +91,11 @@ opentrack_port = ''
 #
 
 path_time = 3.0
-ease_selection = 0
+path_ease_selection = 1
+spatial_selection = 1
+temporal_selection = 0
 point_time = 1.0
+point_ease_selection = 0
 
 #
 
@@ -132,7 +134,7 @@ yaw = 0
 pitch = 0
 roll = 0
 
-transparency = (85, 85, 85) #everything that's black is transparent
+
 
 #camera bot
 start_points = 100 #todo:  option!
@@ -150,13 +152,27 @@ joystickNames = ()
 
 
 controller = "keyboardandmouse"
-#spacemouse
 joystick_loop = True
+#keyboard
+keyboard_motion = 1
+keyboard_wrap_rotation = True
+keyboard_invert_pitch = False
+keyboard_invert_yaw = False
+keyboard_invert_roll = False
+#spacemouse
 joystick = None
-speed_t = 10 #translational
-speed_r = 25 #rotational
+spacemouse_motion = 1
+spacemouse_wrap_rotation = True
+spacemouse_invert_pitch = True
+spacemouse_invert_yaw = False
+spacemouse_invert_roll = False
 #xboxone
 gamepad = None
+xboxone_motion = 1
+xboxone_wrap_rotation = True
+xboxone_invert_pitch = True
+xboxone_invert_yaw = False
+xboxone_invert_roll = False
 
 #mqtt
 broker_address="192.168.1.10" #todo:  option!
@@ -209,10 +225,7 @@ def wraparound(old, new):
 
 def increment(old, new):
 
-    if abs(new) < 0.05:
-        return old
-    else:
-        return old + new/100
+    return old + new
 
 if __name__ != "__mp_main__":
     class MainWindow(QMainWindow):
@@ -225,13 +238,32 @@ if __name__ != "__mp_main__":
             global mqtt_pass
 
             global path_time
-            global ease_selection
+            global path_ease_selection
+            global spatial_selection
+            global temporal_selection
+            global point_ease_selection
             global point_time
 
             global opentrack_ip
             global opentrack_port
             global voice_enable
             global joystick_value
+
+            global keyboard_motion
+            global keyboard_wrap_rotation
+            global keyboard_invert_pitch
+            global keyboard_invert_yaw
+            global keyboard_invert_roll
+            global spacemouse_motion
+            global spacemouse_wrap_rotation
+            global spacemouse_invert_pitch
+            global spacemouse_invert_yaw
+            global spacemouse_invert_roll
+            global xboxone_motion
+            global xboxone_wrap_rotation
+            global xboxone_invert_pitch
+            global xboxone_invert_yaw
+            global xboxone_invert_roll
 
 
 
@@ -252,7 +284,7 @@ if __name__ != "__mp_main__":
             QMainWindow.__init__(self)
             self.ui = Ui_MainWindow()
             self.ui.setupUi(self)
-            F = Functions(self, UIFunctions, self.ui)
+            F = Functions(self, UIFunctions, self.ui, pygame)
             self.F = F
 
             joystick_value = Thread(target=self.joystick_thread)
@@ -263,12 +295,17 @@ if __name__ != "__mp_main__":
             self.mqtt_connected = False
 
             self.ui.controllerSelection.addItem("")
-            self.ui.controllerSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"(please select a controller)", None))
+            self.ui.controllerSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"(please select a device)", None))
+            self.ui.controllerSelection.addItem("")
+            self.ui.controllerSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Standard Keyboard and mouse HID", None))
+            self.ui.controllerSelection.setCurrentIndex(1)
             self.ui.controllerSelection.currentIndexChanged.connect(self.on_controllerSelection_changed)
 
             self.ui.controllerUpdateButton.clicked.connect(self.on_controllerUpdate_clicked)
 
             #self.ui.pushButton.setText(QCoreApplication.translate("MainWindow", u"test", None))
+
+
 
 
             self.ui.controllerTestButton.clicked.connect(self.on_test_clicked)
@@ -303,16 +340,33 @@ if __name__ != "__mp_main__":
             self.ui.spaceMouseButton.clicked.connect(self.on_spaceMouseButton_clicked)
             self.ui.keyboardAndMouseButton.clicked.connect(self.on_keyboardAndMouseButton_clicked)
 
+            self.ui.motionSelection.currentIndexChanged.connect(self.on_motionSelection_changed)
+            self.ui.wrapRotationCheckBox.stateChanged.connect(self.on_wrapRotationCheckBox_changed)
+            self.ui.invertRollCheckBox.stateChanged.connect(self.on_invertRollCheckBox_changed)
+            self.ui.invertPitchCheckBox.stateChanged.connect(self.on_invertPitchCheckBox_changed)
+            self.ui.invertYawCheckBox.stateChanged.connect(self.on_invertYawCheckBox_changed)
+
             match controller:
                 case "xboxone":
                     self.ui.xBoxButton.click()
                 case "spacemouse":
                     self.ui.spaceMouseButton.click()
+                case "keyboardandmouse":
+                    self.ui.keyboardAndMouseButton.click()
 
+            #camera dropdowns
+            self.ui.easeSelection.setCurrentIndex(path_ease_selection)
+            self.ui.easeSelection.currentIndexChanged.connect(self.on_easeSelection_changed)
+            self.ui.skipEaseSelection.setCurrentIndex(point_ease_selection)
+            self.ui.skipEaseSelection.currentIndexChanged.connect(self.on_skipEaseSelection_changed)
+            self.ui.spatialInterpolationSelection.setCurrentIndex(spatial_selection)
+            self.ui.spatialInterpolationSelection.currentIndexChanged.connect(self.on_spatialInterpolationSelection_changed)
+            self.ui.temporalInterpolationSelection.setCurrentIndex(temporal_selection)
+            self.ui.temporalInterpolationSelection.currentIndexChanged.connect(self.on_temporalInterpolationSelection_changed)
 
             ## PRINT ==> SYSTEM
             print('System: ' + platform.system())
-            print('Version: ' +platform.release())
+            print('Version: ' + platform.release())
 
             ########################################################################
             ## START - WINDOW ATTRIBUTES
@@ -490,13 +544,13 @@ if __name__ != "__mp_main__":
 
         def opentrack_ip_changed(self, text):
             global opentrack_ip
-            config.set('opentrack', 'ip', str(text))
+            config.set('dualpc', 'ip', str(text))
             self.write_config()
             opentrack_ip = text
 
         def opentrack_port_changed(self, text):
             global opentrack_port
-            config.set('opentrack', 'port', str(text))
+            config.set('dualpc', 'port', str(text))
             self.write_config()
             opentrack_port = text
 
@@ -693,8 +747,10 @@ if __name__ != "__mp_main__":
             else:
                 self.ui.controllerSelection.clear()
                 self.ui.controllerSelection.addItem("")
-                self.ui.controllerSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"(please select your controller)", None))
-                self.ui.controllerSelection.setCurrentIndex(0)
+                self.ui.controllerSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"(please select a device)", None))
+                self.ui.controllerSelection.addItem("")
+                self.ui.controllerSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Standard Keyboard and mouse HID", None))
+                self.ui.controllerSelection.setCurrentIndex(1)
 
             print("ID", controller_id)
 
@@ -732,7 +788,29 @@ if __name__ != "__mp_main__":
             controller = "xboxone"
             config.set('controllers', 'type', 'xboxone')
 
+            self.ui.motionSelection.setCurrentIndex(xboxone_motion)
+            self.on_motionSelection_changed(xboxone_motion)
+
+            self.ui.wrapRotationCheckBox.setChecked(xboxone_wrap_rotation)
+            self.ui.invertRollCheckBox.setChecked(xboxone_invert_roll)
+            self.ui.invertPitchCheckBox.setChecked(xboxone_invert_pitch)
+            self.ui.invertYawCheckBox.setChecked(xboxone_invert_yaw)
+            self.on_wrapRotationCheckBox_changed(xboxone_wrap_rotation)
+            self.on_invertRollCheckBox_changed(xboxone_invert_roll)
+            self.on_invertPitchCheckBox_changed(xboxone_invert_pitch)
+            self.on_invertYawCheckBox_changed(xboxone_invert_yaw)
+
             self.repopulate_controllers_dropdown()
+
+            self.ui.labelStreamDeck.setVisible(False)
+            self.ui.tableWidget.setVisible(True)
+            self.ui.controllerTestButton.setVisible(True)
+            self.ui.controllerTestButton.setEnabled(True)
+            self.ui.keyMapImage.setStyleSheet(u"QPushButton {\n"
+            "	background-color: rgb(41, 46, 57);\n"
+            "	border-radius: 0px;	\n"
+            "	background-image: url(images/xbox-map.png);\n"
+            "}")
 
 
             self.ui.xBoxButton.setStyleSheet(CSS_buttonActive("images/controllers-02.png"))
@@ -752,7 +830,29 @@ if __name__ != "__mp_main__":
             controller = "keyboardandmouse"
             config.set('controllers', 'type', 'keyboardandmouse')
 
+            self.ui.motionSelection.setCurrentIndex(keyboard_motion)
+            self.on_motionSelection_changed(keyboard_motion)
+
+            self.ui.wrapRotationCheckBox.setChecked(keyboard_wrap_rotation)
+            self.ui.invertRollCheckBox.setChecked(keyboard_invert_roll)
+            self.ui.invertPitchCheckBox.setChecked(keyboard_invert_pitch)
+            self.ui.invertYawCheckBox.setChecked(keyboard_invert_yaw)
+            self.on_wrapRotationCheckBox_changed(keyboard_wrap_rotation)
+            self.on_invertRollCheckBox_changed(keyboard_invert_roll)
+            self.on_invertPitchCheckBox_changed(keyboard_invert_pitch)
+            self.on_invertYawCheckBox_changed(keyboard_invert_yaw)
+
             self.repopulate_controllers_dropdown()
+
+            self.ui.labelStreamDeck.setVisible(True)
+            self.ui.tableWidget.setVisible(False)
+            self.ui.controllerTestButton.setVisible(False)
+            self.ui.controllerTestButton.setEnabled(False)
+            self.ui.keyMapImage.setStyleSheet(u"QPushButton {\n"
+            "	background-color: rgb(41, 46, 57);\n"
+            "	border-radius: 0px;	\n"
+            "	background-image: url(images/keyboard-map.png);\n"
+            "}")
 
             self.ui.controllerSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"(please select your controller)", None))
             self.ui.xBoxButton.setStyleSheet(CSS_button("images/controllers-02.png"))
@@ -773,7 +873,29 @@ if __name__ != "__mp_main__":
             controller = "spacemouse"
             config.set('controllers', 'type', 'spacemouse')
 
+            self.ui.motionSelection.setCurrentIndex(spacemouse_motion)
+            self.on_motionSelection_changed(spacemouse_motion)
+
+            self.ui.wrapRotationCheckBox.setChecked(spacemouse_wrap_rotation)
+            self.ui.invertRollCheckBox.setChecked(spacemouse_invert_roll)
+            self.ui.invertPitchCheckBox.setChecked(spacemouse_invert_pitch)
+            self.ui.invertYawCheckBox.setChecked(spacemouse_invert_yaw)
+            self.on_wrapRotationCheckBox_changed(spacemouse_wrap_rotation)
+            self.on_invertRollCheckBox_changed(spacemouse_invert_roll)
+            self.on_invertPitchCheckBox_changed(spacemouse_invert_pitch)
+            self.on_invertYawCheckBox_changed(spacemouse_invert_yaw)
+
             self.repopulate_controllers_dropdown()
+
+            self.ui.labelStreamDeck.setVisible(False)
+            self.ui.tableWidget.setVisible(True)
+            self.ui.controllerTestButton.setVisible(True)
+            self.ui.controllerTestButton.setEnabled(True)
+            self.ui.keyMapImage.setStyleSheet(u"QPushButton {\n"
+            "	background-color: rgb(41, 46, 57);\n"
+            "	border-radius: 0px;	\n"
+            "	background-image: url(images/spacemouse-map.png);\n"
+            "}")
 
             self.ui.xBoxButton.setStyleSheet(CSS_button("images/controllers-02.png"))
             self.ui.keyboardAndMouseButton.setStyleSheet(CSS_button("images/controllers-04.png"))
@@ -810,8 +932,8 @@ if __name__ != "__mp_main__":
                         config.set('controllers', 'xboxone_name', '')
                         gamepad = None
                     else:
-                        config.set('controllers', 'xboxone_id', controller_id)
-                        config.set('controllers', 'xboxone_name', controller_name)
+                        config.set('controllers', 'xboxone_id', str(controller_id))
+                        config.set('controllers', 'xboxone_name', str(controller_name))
                         gamepad = controller_id
                 case "spacemouse": # We test for different values and print different messages
                     if i > 0 and i <= pygame.joystick.get_count():
@@ -823,9 +945,11 @@ if __name__ != "__mp_main__":
                         config.set('controllers', 'spacemouse_name', '')
                         joystick = None
                     else:
-                        config.set('controllers', 'spacemouse_id', controller_id)
-                        config.set('controllers', 'spacemouse_name', controller_name)
+                        config.set('controllers', 'spacemouse_id', str(controller_id))
+                        config.set('controllers', 'spacemouse_name', str(controller_name))
                         joystick = controller_id
+                case "keyboardandmouse":
+                    self.ui.controllerSelection.setCurrentIndex(1)
 
             try:
                 with open(configIni, 'w') as f:
@@ -852,6 +976,128 @@ if __name__ != "__mp_main__":
                     config.write(f)
             except OSError as error:
                 print(sys.exc_info()[0])
+
+
+        def on_wrapRotationCheckBox_changed(self, i):
+
+            global xboxone_wrap_rotation
+            global spacemouse_wrap_rotation
+            global keyboard_wrap_rotation
+
+            value = 'true'
+            valueBol = True
+            if i == 0:
+                value = 'false'
+                valueBol = False
+
+            match controller:
+                case "xboxone":
+                    config.set('controllers', 'xboxone_wrap_rotation', value)
+                    xboxone_wrap_rotation = valueBol
+                case "spacemouse":
+                    config.set('controllers', 'spacemouse_wrap_rotation', value)
+                    spacemouse_wrap_rotation = valueBol
+                case "keyboardandmouse":
+                    config.set('controllers', 'keyboard_wrap_rotation', value)
+                    keyboard_wrap_rotation = valueBol
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+
+        def on_invertRollCheckBox_changed(self, i):
+
+            global xboxone_invert_roll
+            global spacemouse_invert_roll
+            global keyboard_invert_roll
+
+            value = 'true'
+            valueBol = True
+            if i == 0:
+                value = 'false'
+                valueBol = False
+
+            match controller:
+                case "xboxone":
+                    config.set('controllers', 'xboxone_invert_roll', value)
+                    xboxone_invert_roll = valueBol
+                case "spacemouse":
+                    config.set('controllers', 'spacemouse_invert_roll', value)
+                    spacemouse_invert_roll = valueBol
+                case "keyboardandmouse":
+                    config.set('controllers', 'keyboard_invert_roll', value)
+                    keyboard_invert_roll = valueBol
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+
+
+        def on_invertPitchCheckBox_changed(self, i):
+
+            global xboxone_invert_pitch
+            global spacemouse_invert_pitch
+            global keyboard_invert_pitch
+
+            value = 'true'
+            valueBol = True
+            if i == 0:
+                value = 'false'
+                valueBol = False
+
+            match controller:
+                case "xboxone":
+                    config.set('controllers', 'xboxone_invert_pitch', value)
+                    xboxone_invert_pitch = valueBol
+                case "spacemouse":
+                    config.set('controllers', 'spacemouse_invert_pitch', value)
+                    spacemouse_invert_pitch = valueBol
+                case "keyboardandmouse":
+                    config.set('controllers', 'keyboard_invert_pitch', value)
+                    keyboard_invert_pitch = valueBol
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+
+        def on_invertYawCheckBox_changed(self, i):
+
+            global xboxone_invert_yaw
+            global spacemouse_invert_yaw
+            global keyboard_invert_yaw
+
+            value = 'true'
+            valueBol = True
+            if i == 0:
+                value = 'false'
+                valueBol = False
+
+            match controller:
+                case "xboxone":
+                    config.set('controllers', 'xboxone_invert_yaw', value)
+                    xboxone_invert_yaw = valueBol
+                case "spacemouse":
+                    config.set('controllers', 'spacemouse_invert_yaw', value)
+                    spacemouse_invert_yaw = valueBol
+                case "keyboardandmouse":
+                    config.set('controllers', 'keyboard_invert_yaw', value)
+                    keyboard_invert_yaw = valueBol
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
 
         def on_voiceEnable_changed(self, i):
             global voice_enable
@@ -895,6 +1141,83 @@ if __name__ != "__mp_main__":
                     config.write(f)
             except OSError as error:
                 print(sys.exc_info()[0])
+
+        def on_motionSelection_changed(self, i):
+
+            global xboxone_motion
+            global spacemouse_motion
+            global keyboard_motion
+
+            match controller:
+                case "xboxone":
+                    config.set('controllers', 'xboxone_motion', str(i))
+                    xboxone_motion = i
+                case "spacemouse":
+                    config.set('controllers', 'spacemouse_motion', str(i))
+                    spacemouse_motion = i
+                case "keyboardandmouse":
+                    config.set('controllers', 'keyboard_motion', str(i))
+                    keyboard_motion = i
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+        def on_easeSelection_changed(self, i):
+            global path_ease_selection
+
+            path_ease_selection = i
+            config.set('speed', 'path_ease', str(path_ease_selection))
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+        def on_skipEaseSelection_changed(self, i):
+            global point_ease_selection
+
+            point_ease_selection = i
+            config.set('speed', 'point_ease', str(point_ease_selection))
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+        def on_spatialInterpolationSelection_changed(self, i):
+            global spatial_selection
+
+            spatial_selection = i
+            config.set('speed', 'spatial', str(spatial_selection))
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+        def on_temporalInterpolationSelection_changed(self, i):
+            global temporal_selection
+
+            if i > 1:
+                temporal_selection = 0
+                self.ui.temporalInterpolationSelection.setCurrentIndex(temporal_selection)
+            else:
+                temporal_selection = i
+            config.set('speed', 'temporal', str(temporal_selection))
+
+            try:
+                with open(configIni, 'w') as f:
+                    config.write(f)
+            except OSError as error:
+                print(sys.exc_info()[0])
+
+
 
         def on_voiceSelection_changed(self, i):
 
@@ -1037,169 +1360,219 @@ if __name__ != "__mp_main__":
 
                 controller_id = -1
 
-                time.sleep(0.005) #200 fps (ish) !!change this to proper 120 fps
+                time.sleep(0.005) #200 fps (ish) !!!change this to proper 120 fps
+
+                if self.F.roboting:
+                    x = self.F.x
+                    y = self.F.y
+                    z = self.F.z
+                    yaw = self.F.yaw
+                    pitch = self.F.pitch
+                    roll = self.F.roll
+
+                else:
+
+                    try:
+                        if controllers_count != pygame.joystick.get_count():
+                            controllers_count = pygame.joystick.get_count()
+                            self.repopulate_controllers_dropdown()
+                            #self.ui.controllerSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"penis", None))
+                            print("controllers changed")
+                            #joystickNames = [pygame.joystick.Joystick(x).get_name() for x in range(pygame.joystick.get_count())]
+                            #joystickIds = [pygame.joystick.Joystick(x).get_instance_id() for x in range(pygame.joystick.get_count())]
+                            #joystickUids = [pygame.joystick.Joystick(x).get_guid() for x in range(pygame.joystick.get_count())]
+                    except pygame.error as message:
+                        print(message)
 
 
-                try:
-                    if controllers_count != pygame.joystick.get_count():
-                        controllers_count = pygame.joystick.get_count()
-                        self.repopulate_controllers_dropdown()
-                        #self.ui.controllerSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"penis", None))
-                        print("controllers changed")
-                        #joystickNames = [pygame.joystick.Joystick(x).get_name() for x in range(pygame.joystick.get_count())]
-                        #joystickIds = [pygame.joystick.Joystick(x).get_instance_id() for x in range(pygame.joystick.get_count())]
-                        #joystickUids = [pygame.joystick.Joystick(x).get_guid() for x in range(pygame.joystick.get_count())]
-                except pygame.error as message:
-                    print(message)
+                    if controller == 'xboxone':
 
+                        #print('FreeTrack', TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z)
 
-                if controller == 'xboxone':
+                        pygame.event.pump()
 
-                    #print('FreeTrack', TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z)
-
-                    pygame.event.pump()
-
-                    if gamepad != None:
-
-                        try:
-                            for c in range(pygame.joystick.get_count()):
-                                if gamepad == pygame.joystick.Joystick(c).get_guid():
-                                    controller_id = c
-                                    break
-                        except pygame.error as message:
-                            print(message)
-
-                        if controller_id >= 0:
-
-                            try:
-
-                                #absolute coordinates
-                                #x = increment(x, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1) - math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0)) * 100 * xboxone_sensitivity)
-                                #z = increment(z, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0) + math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1)) * 100 * xboxone_sensitivity)
-                                #y = increment(y, (pygame.joystick.Joystick(controller_id).get_axis(5)+1 - (pygame.joystick.Joystick(controller_id).get_axis(4)+1))/2 * 100 * xboxone_sensitivity)
-
-                                #yaw = increment(yaw, (- pygame.joystick.Joystick(controller_id).get_axis(2)) / 2 * xboxone_sensitivity)
-                                #pitch = increment(pitch, (- pygame.joystick.Joystick(controller_id).get_axis(3)) / 2 * xboxone_sensitivity)
-                                #if pygame.joystick.Joystick(controller_id).get_button(4):
-                                #    roll = roll + 0.0025 * xboxone_sensitivity
-                                #if pygame.joystick.Joystick(controller_id).get_button(5):
-                                #    roll = roll - 0.0025 * xboxone_sensitivity
-
-                                #relative coordinates
-                                x = increment(x, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1) - math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0)) * 100 * xboxone_sensitivity)
-                                z = increment(z, (- math.sin(yaw) * pygame.joystick.Joystick(controller_id).get_axis(0) + math.cos(yaw) * pygame.joystick.Joystick(controller_id).get_axis(1)) * 100 * xboxone_sensitivity)
-                                y = increment(y, (pygame.joystick.Joystick(controller_id).get_axis(5)+1 - (pygame.joystick.Joystick(controller_id).get_axis(4)+1))/2 * 100 * xboxone_sensitivity)
-
-                                yaw = increment(yaw, (- pygame.joystick.Joystick(controller_id).get_axis(2)) / 2 * xboxone_sensitivity)
-                                pitch = increment(pitch, (- math.sin(roll) * pygame.joystick.Joystick(controller_id).get_axis(2) - math.cos(roll) * pygame.joystick.Joystick(controller_id).get_axis(3)) / 2 * xboxone_sensitivity)
-
-                                #if pitch is down, roll should be yaw
-                                roll = increment(roll, ( math.sin(pitch) * pygame.joystick.Joystick(controller_id).get_axis(2)) / 2 * xboxone_sensitivity)
-                                if pygame.joystick.Joystick(controller_id).get_button(4):
-                                    roll = (roll + math.cos(pitch) * 0.0025 * xboxone_sensitivity)
-                                    yaw = (yaw + math.sin(pitch) * 0.0025 * xboxone_sensitivity)
-                                if pygame.joystick.Joystick(controller_id).get_button(5):
-                                    roll = (roll - math.cos(pitch) * 0.0025 * xboxone_sensitivity)
-                                    yaw = (yaw - math.sin(pitch) * 0.0025 * xboxone_sensitivity)
-
-                                #print('yaw', yaw, 'pitch', pitch, 'roll', roll)
-
-                                #print('yaw',yaw,'x',x,'z',z)
-
-                                #wrap yaw/pitch/roll motions (should be an option)
-                                yaw = (yaw+math.pi)%(2*math.pi)-math.pi
-                                pitch = (pitch+math.pi)%(2*math.pi)-math.pi
-                                roll = (roll+math.pi)%(2*math.pi)-math.pi
-
-
-                                if abs(x) > 500 or abs(y) > 500 or abs(z) > 500 or abs(yaw) > math.pi or abs(pitch) > math.pi or abs(roll) > math.pi:
-                                     pygame.joystick.Joystick(controller_id).rumble(0, .5, 2)
-                                else:
-                                     pygame.joystick.Joystick(controller_id).stop_rumble()
-
-
-                                for event in pygame.event.get():
-                                    if event.type == pygame.JOYHATMOTION:
-                                        if pygame.joystick.Joystick(controller_id).get_hat(0)[1] == 1:
-                                            print('sensitivity up')
-                                            q.put('sensitivity up')
-                                            if not xboxone_sensitivity * math.sqrt(2) >= 16:
-                                                xboxone_sensitivity = xboxone_sensitivity * math.sqrt(2)
-                                        elif pygame.joystick.Joystick(controller_id).get_hat(0)[1] == -1:
-                                            print('sensitivity down')
-                                            q.put('sensitivity down')
-                                            if not xboxone_sensitivity / math.sqrt(2) <= 0.0625:
-                                                xboxone_sensitivity = xboxone_sensitivity / math.sqrt(2)
-                                    if event.type == pygame.JOYBUTTONDOWN:
-                                        if pygame.joystick.Joystick(controller_id).get_button(0):
-                                            self.ui.pushButton_add_waypoint.click()
-                                            print('A')
-                                        if pygame.joystick.Joystick(controller_id).get_button(1):
-                                            self.ui.pushButton_delete_all.click()
-                                            print('B')
-                                        if pygame.joystick.Joystick(controller_id).get_button(2):
-                                            self.F.goHome(q, config)
-                                            print('X')
-                                        if pygame.joystick.Joystick(controller_id).get_button(3):
-                                            print('Y')
-                                        if pygame.joystick.Joystick(controller_id).get_button(6):
-                                            self.goBackward(q, config)
-                                            print('window')
-                                        if pygame.joystick.Joystick(controller_id).get_button(7):
-                                            self.goForward(q, config)
-                                            print('settings')
-                                        if pygame.joystick.Joystick(controller_id).get_button(8):
-                                            print('left down')
-                                        if pygame.joystick.Joystick(controller_id).get_button(9):
-                                            print('right down')
-                                        if pygame.joystick.Joystick(controller_id).get_button(10):
-                                            print('xbox')
-                                        if pygame.joystick.Joystick(controller_id).get_button(11):
-                                            self.showForeground()
-                                            print('share')
-
-                            except pygame.error as message:
-                                print("Cannot read gamepad ID " + str(controller_id))
-                                print(message)
-                                #raise SystemExit(message)
-
-                    #print(x,y,z,yaw,pitch,roll)
-
-                elif controller == 'spacemouse':
-
-                    pygame.event.pump()
-
-                    if joystick != None:
-
-                        try:
-                            for c in range(pygame.joystick.get_count()):
-                                if joystick == pygame.joystick.Joystick(c).get_guid():
-                                    controller_id = c
-                                    break
-                        except pygame.error as message:
-                            print(message)
-
-                        if controller_id >= 0:
+                        if gamepad != None:
 
                             try:
-                                x = wraparound(x, - pygame.joystick.Joystick(controller_id).get_axis(0))
-                                y = wraparound(y, - pygame.joystick.Joystick(controller_id).get_axis(2))
-                                z = wraparound(z, pygame.joystick.Joystick(controller_id).get_axis(1))
-                                yaw = wraparound(yaw, pygame.joystick.Joystick(controller_id).get_axis(4))
-                                pitch = wraparound(pitch, pygame.joystick.Joystick(controller_id).get_axis(3))
-                                roll = wraparound(roll, - pygame.joystick.Joystick(controller_id).get_axis(5))
-
-                                #print(x,y,z,yaw,pitch,roll)
+                                for c in range(pygame.joystick.get_count()):
+                                    if gamepad == pygame.joystick.Joystick(c).get_guid():
+                                        controller_id = c
+                                        break
                             except pygame.error as message:
-                                print("Cannot read joystick ID " + str(controller_id))
                                 print(message)
-                                #raise SystemExit(message)
 
-                if controller == 'xboxone' or controller == 'spacemouse':
-
-                    self.F.updateFreeTrack(x,y,z,yaw,pitch,roll)
+                            if controller_id >= 0:
 
 
+                                invert_roll = 1
+                                if xboxone_invert_roll:
+                                    invert_roll = -1
+                                invert_yaw = 1
+                                if xboxone_invert_yaw:
+                                    invert_yaw = -1
+                                invert_pitch = -1
+                                if not xboxone_invert_pitch:
+                                    invert_pitch = 1
+
+                                try:
+
+                                    stick_x = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(0), .05)
+                                    stick_y0 = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(4), .05)
+                                    stick_y1 = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(5), .05)
+                                    stick_z = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(1), .05)
+                                    stick_pitch = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(3), .05)
+                                    stick_yaw = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(2), .05)
+
+
+                                    if xboxone_motion == 0: #absolute coordinates
+                                        x = increment(x, (- stick_x)  * xboxone_sensitivity)
+                                        z = increment(z, (stick_z)  * xboxone_sensitivity)
+                                        y = increment(y, (stick_y1+1 - (stick_y0+1))/2  * xboxone_sensitivity)
+
+                                        yaw = increment(yaw, (- stick_yaw * invert_yaw) / 200 * xboxone_sensitivity)
+                                        pitch = increment(pitch, (stick_pitch * invert_pitch) / 200 * xboxone_sensitivity)
+                                        if pygame.joystick.Joystick(controller_id).get_button(4):
+                                            roll = roll + 0.0025 * xboxone_sensitivity * invert_roll
+                                        if pygame.joystick.Joystick(controller_id).get_button(5):
+                                            roll = roll - 0.0025 * xboxone_sensitivity * invert_roll
+
+                                    else: #relative coordinates
+                                        x = increment(x, (- math.sin(yaw) * stick_z - math.cos(yaw) * stick_x) * xboxone_sensitivity)
+                                        z = increment(z, (- math.sin(yaw) * stick_x + math.cos(yaw) * stick_z) * xboxone_sensitivity)
+                                        y = increment(y, (stick_y1+1 - (stick_y0+1))/2 * xboxone_sensitivity)
+
+                                        yaw = increment(yaw, (- stick_yaw * invert_yaw) / 200 * xboxone_sensitivity)
+                                        pitch = increment(pitch, (- math.sin(roll) * stick_yaw * invert_yaw + math.cos(roll) * stick_pitch * invert_pitch) / 200 * xboxone_sensitivity)
+
+                                        #if pitch is down, roll should be yaw
+                                        roll = increment(roll, ( math.sin(pitch) * stick_yaw * invert_yaw) / 200 * xboxone_sensitivity)
+                                        if pygame.joystick.Joystick(controller_id).get_button(4):
+                                            roll = (roll + math.cos(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
+                                            yaw = (yaw + math.sin(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
+                                        if pygame.joystick.Joystick(controller_id).get_button(5):
+                                            roll = (roll - math.cos(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
+                                            yaw = (yaw - math.sin(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
+
+                                    #print('yaw', yaw, 'pitch', pitch, 'roll', roll)
+
+                                    #print('yaw',yaw,'x',x,'z',z)
+
+                                    #wrap yaw/pitch/roll motions (should be an option)
+                                    if xboxone_wrap_rotation:
+                                        yaw = (yaw+math.pi)%(2*math.pi)-math.pi
+                                        pitch = (pitch+math.pi)%(2*math.pi)-math.pi
+                                        roll = (roll+math.pi)%(2*math.pi)-math.pi
+
+
+                                    if abs(x) > 500 or abs(y) > 500 or abs(z) > 500 or abs(yaw) > math.pi or abs(pitch) > math.pi or abs(roll) > math.pi:
+                                        pygame.joystick.Joystick(controller_id).rumble(0, .5, 2)
+                                        if abs(x) > 500:
+                                            x = np.sign(x) * 500
+                                        if abs(y) > 500:
+                                            y = np.sign(y) * 500
+                                        if abs(z) > 500:
+                                            z = np.sign(z) * 500
+                                        if abs(yaw) > math.pi:
+                                            yaw = np.sign(yaw) * math.pi
+                                        if abs(pitch) > math.pi:
+                                            pitch = np.sign(pitch) * math.pi
+                                        if abs(roll) > math.pi:
+                                            roll = np.sign(roll) * math.pi
+                                    else:
+                                        pygame.joystick.Joystick(controller_id).stop_rumble()
+
+
+                                    for event in pygame.event.get():
+                                        if event.type == pygame.JOYHATMOTION:
+                                            if pygame.joystick.Joystick(controller_id).get_hat(0)[1] == 1:
+                                                print('sensitivity up')
+                                                q.put('sensitivity up')
+                                                if not xboxone_sensitivity * math.sqrt(2) >= 16:
+                                                    xboxone_sensitivity = xboxone_sensitivity * math.sqrt(2)
+                                            elif pygame.joystick.Joystick(controller_id).get_hat(0)[1] == -1:
+                                                print('sensitivity down')
+                                                q.put('sensitivity down')
+                                                if not xboxone_sensitivity / math.sqrt(2) <= 0.0625:
+                                                    xboxone_sensitivity = xboxone_sensitivity / math.sqrt(2)
+                                        if event.type == pygame.JOYBUTTONDOWN:
+                                            if pygame.joystick.Joystick(controller_id).get_button(0):
+                                                self.ui.pushButton_add_waypoint.click()
+                                                print('A')
+                                            if pygame.joystick.Joystick(controller_id).get_button(1):
+                                                self.ui.pushButton_delete_all.click()
+                                                print('B')
+                                            if pygame.joystick.Joystick(controller_id).get_button(2):
+                                                self.F.goHome(q, config)
+                                                print('X')
+                                            if pygame.joystick.Joystick(controller_id).get_button(3):
+                                                print('Y')
+                                            if pygame.joystick.Joystick(controller_id).get_button(6):
+                                                self.goBackward(q, config)
+                                                print('window')
+                                            if pygame.joystick.Joystick(controller_id).get_button(7):
+                                                self.goForward(q, config)
+                                                print('settings')
+                                            if pygame.joystick.Joystick(controller_id).get_button(8):
+                                                print('left down')
+                                            if pygame.joystick.Joystick(controller_id).get_button(9):
+                                                print('right down')
+                                            if pygame.joystick.Joystick(controller_id).get_button(10):
+                                                print('xbox')
+                                            if pygame.joystick.Joystick(controller_id).get_button(11):
+                                                self.showForeground()
+                                                print('share')
+
+                                except pygame.error as message:
+                                    print("Cannot read gamepad ID " + str(controller_id))
+                                    print(message)
+                                    #raise SystemExit(message)
+
+                        #print(x,y,z,yaw,pitch,roll)
+
+                    elif controller == 'spacemouse':
+
+                        pygame.event.pump()
+
+                        if joystick != None:
+
+                            try:
+                                for c in range(pygame.joystick.get_count()):
+                                    if joystick == pygame.joystick.Joystick(c).get_guid():
+                                        controller_id = c
+                                        break
+                            except pygame.error as message:
+                                print(message)
+
+                            if controller_id >= 0:
+
+                                try:
+                                    x = wraparound(x, - pygame.joystick.Joystick(controller_id).get_axis(0))
+                                    y = wraparound(y, - pygame.joystick.Joystick(controller_id).get_axis(2))
+                                    z = wraparound(z, pygame.joystick.Joystick(controller_id).get_axis(1))
+                                    yaw = wraparound(yaw, pygame.joystick.Joystick(controller_id).get_axis(4))
+                                    pitch = wraparound(pitch, pygame.joystick.Joystick(controller_id).get_axis(3))
+                                    roll = wraparound(roll, - pygame.joystick.Joystick(controller_id).get_axis(5))
+
+                                    #print(x,y,z,yaw,pitch,roll)
+                                except pygame.error as message:
+                                    print("Cannot read joystick ID " + str(controller_id))
+                                    print(message)
+                                    #raise SystemExit(message)
+
+                    if controller == 'xboxone' or controller == 'spacemouse':
+
+                        self.F.updateFreeTrack(x,y,z,yaw,pitch,roll)
+
+
+
+        def Deadzone(self, value, zone):
+            if (abs(value) < zone):
+                return 0
+            else:
+                if value < 0:
+                    return value + zone
+                else:
+                    return value - zone
 
         ########################################################################
         ## MENUS ==> DYNAMIC MENUS FUNCTIONS
@@ -1377,10 +1750,8 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()
 
     print("\nPLEASE make sure")
-    print("- opentrack Options > Filter is set to 1°/0.1mm Smoothing and no Deadzone")
-    print("- opentrack is started with 'UDP over network' input on port 4242")
-    print("- Star Citizen is running in windowed mode")
     print("- TrackIR v5 is closed\n")
+    print("- Star Citizen is launched after CamBot 6D")
 
     print('READING CONFIG')
 
@@ -1405,9 +1776,34 @@ if __name__ == "__main__":
 
     if config.has_option('speed', 'path'):
         path_time = config.getfloat('speed', 'path')
+    else:
+        config.set('speed', 'path', str(path_time))
 
     if config.has_option('speed', 'point'):
         point_time = config.getfloat('speed', 'point')
+    else:
+        config.set('speed', 'point', str(point_time))
+
+    if config.has_option('speed', 'path_ease'):
+        path_ease_selection = config.getint('speed', 'path_ease')
+    else:
+        config.set('speed', 'path_ease', str(path_ease_selection))
+
+    if config.has_option('speed', 'point_ease'):
+        point_ease_selection = config.getint('speed', 'point_ease')
+    else:
+        config.set('speed', 'point_ease', str(point_ease_selection))
+
+    if config.has_option('speed', 'spatial'):
+        spatial_selection = config.getint('speed', 'spatial')
+    else:
+        config.set('speed', 'spatial', str(spatial_selection))
+
+    if config.has_option('speed', 'temporal'):
+        temporal_selection = config.getint('speed', 'temporal')
+    else:
+        config.set('speed', 'temporal', str(temporal_selection))
+
 
     if not config.has_section('voice'):
         config.add_section('voice')
@@ -1425,13 +1821,13 @@ if __name__ == "__main__":
     else:
         config.set('voice', 'volume', str(volume))
 
-    if not config.has_section('opentrack'):
-        config.add_section('opentrack')
+    if not config.has_section('dualpc'):
+        config.add_section('dualpc')
 
-    if config.has_option('opentrack', 'ip'):
-        opentrack_ip = config.get('opentrack', 'ip')
-    if config.has_option('opentrack', 'port'):
-        opentrack_port = config.get('opentrack', 'port')
+    if config.has_option('dualpc', 'ip'):
+        opentrack_ip = config.get('dualpc', 'ip')
+    if config.has_option('dualpc', 'port'):
+        opentrack_port = config.get('dualpc', 'port')
 
     if not config.has_section('mqtt'):
         config.add_section('mqtt')
@@ -1462,6 +1858,45 @@ if __name__ == "__main__":
         print(config.get('controllers', 'xboxone_id'))
     if config.has_option('controllers', 'xboxone_name'):
         print(config.get('controllers', 'xboxone_name'))
+
+    if config.has_option('controllers', 'spacemouse_motion'):
+        spacemouse_motion = config.getint('controllers', 'spacemouse_motion')
+    else:
+        config.set('controllers', 'spacemouse_motion', str(spacemouse_motion))
+    if config.has_option('controllers', 'spacemouse_invert_pitch'):
+        spacemouse_invert_pitch = config.getboolean('controllers', 'spacemouse_invert_pitch')
+    if config.has_option('controllers', 'spacemouse_invert_yaw'):
+        spacemouse_invert_yaw = config.getboolean('controllers', 'spacemouse_invert_yaw')
+    if config.has_option('controllers', 'spacemouse_invert_roll'):
+        spacemouse_invert_roll = config.getboolean('controllers', 'spacemouse_invert_roll')
+    if config.has_option('controllers', 'spacemouse_wrap_rotation'):
+        spacemouse_wrap_rotation = config.getboolean('controllers', 'spacemouse_wrap_rotation')
+
+    if config.has_option('controllers', 'xboxone_motion'):
+        xboxone_motion = config.getint('controllers', 'xboxone_motion')
+    else:
+        config.set('controllers', 'xboxone_motion', str(xboxone_motion))
+    if config.has_option('controllers', 'xboxone_invert_pitch'):
+        xboxone_invert_pitch = config.getboolean('controllers', 'xboxone_invert_pitch')
+    if config.has_option('controllers', 'xboxone_invert_yaw'):
+        xboxone_invert_yaw = config.getboolean('controllers', 'xboxone_invert_yaw')
+    if config.has_option('controllers', 'xboxone_invert_roll'):
+        xboxone_invert_roll = config.getboolean('controllers', 'xboxone_invert_roll')
+    if config.has_option('controllers', 'xboxone_wrap_rotation'):
+        xboxone_wrap_rotation = config.getboolean('controllers', 'xboxone_wrap_rotation')
+
+    if config.has_option('controllers', 'keyboard_motion'):
+        keyboard_motion = config.getint('controllers', 'keyboard_motion')
+    else:
+        config.set('controllers', 'keyboard_motion', str(keyboard_motion))
+    if config.has_option('controllers', 'keyboard_invert_pitch'):
+        keyboard_invert_pitch = config.getboolean('controllers', 'keyboard_invert_pitch')
+    if config.has_option('controllers', 'keyboard_invert_yaw'):
+        keyboard_invert_yaw = config.getboolean('controllers', 'keyboard_invert_yaw')
+    if config.has_option('controllers', 'keyboard_invert_roll'):
+        keyboard_invert_roll = config.getboolean('controllers', 'keyboard_invert_roll')
+    if config.has_option('controllers', 'keyboard_wrap_rotation'):
+        keyboard_wrap_rotation = config.getboolean('controllers', 'keyboard_wrap_rotation')
 
     # getfloat() raises an exception if the value is not a float
     # getint() and getboolean() also do this for their respective types

@@ -14,7 +14,7 @@ Currently broken
 
 # Limitations
 
-- **Camera offset limited to ±5 meters in X,Y,Z directions**  
+- **Camera offset limited to ±2 meters in X,Y,Z directions**  
   This is a limitation of 3rd person camera head tracking controls in Star Citizen and cannot be circumvented.
 
 # Dokumentation
@@ -27,9 +27,8 @@ https://www.lordskippy.com/software/virtual-camera-robot
 
 ### Requirements:
 
-- **opentrack**: https://github.com/opentrack/opentrack/releases  
-  if you use TrackIR head tracking, terminate the TrackIR v5 Windows app before using CamBot 6D
 - **Star Citizen**: https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD
+- If you use TrackIR head tracking, terminate the TrackIR v5 Windows app before using CamBot 6D
 
 ### Optional:
 
@@ -71,3 +70,5 @@ But you need to replace the `datas` line in `CamBot6D.spec` with this:
 This is an unofficial Star Citizen fansite, not affiliated with the Cloud Imperium group of companies. All content on this site not authored by its host or users are property of their respective owners.
 
 User interface based on [Simple_PySide_Base](https://github.com/Wanderson-Magalhaes/Simple_PySide_Base) and [Render_Time_Calculator](https://github.com/Wanderson-Magalhaes/Render_Time_Calculator) by Wanderson M. Pimenta.
+
+TrackIR communication based on [opentrack's](https://github.com/opentrack/opentrack) implementation of the [FreeTrack protocol](https://github.com/opentrack/opentrack/tree/master/proto-ft).
