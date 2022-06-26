@@ -12,8 +12,8 @@ You can also use CamBot 6D to split the advanced camera controls of Star Citizen
 
 - Define an arbitrary camera path by setting waypoints.
 - Set duration, ease and interpolation option for the spline path.  
-  Spatial: Linear (hard corners) | Quadratic (smooth) | Cubic (relaxed)  
-  Temporal: Auto (smooth) | Isochronous (equal time to travel between pair of waypoints) | Manual (define times for each individual segmet)
+  Spatial: `Linear` (hard corners) | `Quadratic` (smooth) | `Cubic` (relaxed)  
+ Temporal: `Auto` (smooth) | `Isochronous` (equal time to travel between pair of waypoints) | `Manual` (define times for each individual segmet)
 - Delete or edit individual waypoints.
 - Skip between points on demand to create individual timings that fit your scene.
 
@@ -21,8 +21,8 @@ You can also use CamBot 6D to split the advanced camera controls of Star Citizen
 
 - Compatible with keyboard/mouse, 6-axis SpaceMouse, and Xbox Controller.
 - Save individual inversion and motion settings per input device.
-- X/Y translation options.  
-  Absolute: WASD navigates along coordinates set by initial camera orientation | Relative: WASD navigates relative to current camera orientation
+- X/Y translation options:  
+  `Absolute` WASD navigates along coordinates set by initial camera orientation | `Relative` WASD navigates relative to current camera orientation
 
 ![image_1](https://github.com//gulbrillo/CamBot-6D/blob/main/doc/cambot6d3.png?raw=true)
 
