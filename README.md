@@ -11,21 +11,25 @@ You can also use CamBot 6D to split the advanced camera controls of Star Citizen
 ![image_1](https://github.com//gulbrillo/CamBot-6D/blob/main/doc/cambot6d1.png?raw=true)
 
 - Define an arbitrary camera path by setting waypoints.
-- Set duration, ease and interpolation option for the spline path.
-  Spatial: Linear (hard corners), Quadratic (smooth), Cubic (relaxed)
-  Temporal: Auto (smooth), Isochronous (equal time to travel between pair of waypoints), Manual (define times for each individual segmet)
+- Set duration, ease and interpolation option for the spline path.  
+  Spatial: Linear (hard corners) | Quadratic (smooth) | Cubic (relaxed)  
+  Temporal: Auto (smooth) | Isochronous (equal time to travel between pair of waypoints) | Manual (define times for each individual segmet)
 - Delete or edit individual waypoints.
 - Skip between points on demand to create individual timings that fit your scene.
 
 ![image_1](https://github.com//gulbrillo/CamBot-6D/blob/main/doc/cambot6d2.png?raw=true)
 
-- Define an arbitrary camera path by setting waypoints.
-- Set duration, ease and interpolation option for the spline path.
-- Delete or edit individual waypoints.
-- Skip between points on demand to create individual timings that fit your scene.
+- Compatible with keyboard/mouse, 6-axis SpaceMouse, and Xbox Controller.
+- Save individual inversion and motion settings per input device.
+- X/Y translation options.  
+  Absolute: WASD navigates along coordinates set by initial camera orientation | Relative: WASD navigates relative to current camera orientation
 
 ![image_1](https://github.com//gulbrillo/CamBot-6D/blob/main/doc/cambot6d3.png?raw=true)
 
+- Hot key to bring CamBot 6D GUI to the foreground
+- Voice output for audio feedback when waypoints are set or deleted, countdowns, and error messages
+- MQTT client to connect GUI features to a Stream Deck or other smart home devices
+- Dual PC option: use a second Windows PC in the same network to control the Star Citizen camera remotely
 
 # Limitations
 
