@@ -501,16 +501,24 @@ class Functions(MainWindow):
         print('FRAMES', frames)
 
         if config.has_option('speed', 'spatial'): #Degree of the spline. Cubic splines are recommended. Even values of k should be avoided especially with a small s-value. 1 <= k <= 5
-            k_limit = config.getint('speed', 'spatial') + 1 #0 == linear (k_limit = 1), 1 == quadratic (k_limit = 2), 2 = cubic (k_limit = 3)
+            interpolation_config = config.getint('speed', 'spatial')
+            if interpolation_config == 0:
+                k_limit = 1 #0 == linear (k_limit = 1), 1 == quadratic (k_limit = 2), 2 = cubic (k_limit = 3), ...
+            elif interpolation_config == 1:
+                k_limit = 3  #quadratic (k_limit = 2), 3 == cubic (k_limit = 3), ...
+            elif interpolation_config == 2:
+                k_limit = 5
         else:
-            k_limit = 2 # quadratic is default
+            k_limit = 3 # cubic is default
 
         #if not enough waypoints, limit k_limit to len(path) - 1
         if (len(path) < 3):
             k_limit = 1
         elif (len(path) < 4 and k_limit > 1):
             k_limit = 2
-        elif (len(path) < 5 and k_limit > 2):
+        elif (len(path) < 5 and k_limit > 1):
+            k_limit = 3
+        elif (len(path) < 6 and k_limit > 1): #if path smaller 6 points (5 segments, use cubic instead of 5D)
             k_limit = 3
 
 

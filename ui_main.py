@@ -1153,9 +1153,9 @@ class Ui_MainWindow(object):
         self.spatialInterpolationSelection.addItem("")
         self.spatialInterpolationSelection.setItemText(0, QCoreApplication.translate("MainWindow", u"Linear", None))
         self.spatialInterpolationSelection.addItem("")
-        self.spatialInterpolationSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Quadratic", None))
+        self.spatialInterpolationSelection.setItemText(1, QCoreApplication.translate("MainWindow", u"Smooth", None))
         self.spatialInterpolationSelection.addItem("")
-        self.spatialInterpolationSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Cubic", None))
+        self.spatialInterpolationSelection.setItemText(2, QCoreApplication.translate("MainWindow", u"Tight", None))
 
         self.verticalLayout_M2a.addWidget(self.spatialInterpolationSelection, 4, 0, 1, 1)
 
