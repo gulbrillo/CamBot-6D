@@ -94,6 +94,9 @@ class Functions(MainWindow):
         mmap_sharedmem = mmap.mmap(-1, ft_heap_bytes, 'FT_SharedMem', access=mmap.ACCESS_DEFAULT,offset=0)
         #print('MMAP', mmap_sharedmem)
 
+        # Signal to FreeTrack-compatible games that a tracker is active
+        ft_mutex = ctypes.windll.kernel32.CreateMutexA(None, False, b"FT_Mutext")
+
         while self.sendToFreeTrack:
 
 
@@ -210,6 +213,9 @@ class Functions(MainWindow):
             data = struct.pack('ii', 0, 0 )
             mmap_sharedmem.seek(ft_heap_bytes - 3*4)
             mmap_sharedmem.write(data)
+
+        if ft_mutex:
+            ctypes.windll.kernel32.CloseHandle(ft_mutex)
 
 
     def __init__(self, window, UIFunctions, UI, PyGame):
