@@ -232,6 +232,7 @@ class Functions(MainWindow):
 
         self.robot = None
         self.roboting = False
+        self.skip_index = -1
 
         self.fps = 120
 
@@ -609,6 +610,7 @@ class Functions(MainWindow):
     def deleteAll(self, queue, config):
         queue.put('all waypoints deleted')
         self.points = np.empty((0,6), float)
+        self.skip_index = -1
 
         table = self.window.ui.tableWidget_waypoints
         count = table.rowCount()
@@ -732,6 +734,29 @@ class Functions(MainWindow):
             queue.put('already home')
             self.robot = None
 
+
+    def skipToNext(self, queue, config):
+        if len(self.points) == 0:
+            queue.put('no waypoints')
+            return
+        self.skip_index = min(self.skip_index + 1, len(self.points) - 1)
+        self._skipToIndex(queue, config)
+
+    def skipToPrev(self, queue, config):
+        if len(self.points) == 0:
+            queue.put('no waypoints')
+            return
+        self.skip_index = max(self.skip_index - 1, 0)
+        self._skipToIndex(queue, config)
+
+    def _skipToIndex(self, queue, config):
+        duration = config.getfloat('speed', 'point') if config.has_option('speed', 'point') else 1.0
+        easing   = config.getint('speed', 'point_ease') if config.has_option('speed', 'point_ease') else 0
+        position_from = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
+        position_to   = list(self.points[self.skip_index])
+        path = np.concatenate((np.empty((0, 6), float), [position_from], [position_to]))
+        self.robot = self.calculateSpline(path, duration, easing, config)
+        queue.put(f'waypoint {self.skip_index + 1}')
 
     def saveWaypoint(self, queue):
         queue.put('waypoint added')

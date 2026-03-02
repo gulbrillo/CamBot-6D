@@ -137,8 +137,6 @@ roll = 0
 
 
 #camera bot
-start_points = 100 #todo:  option!
-points = 2000
 path_x = [] #[left .. right]
 path_y = [] #[down .. up]
 path_z = [] #[backwards .. forwards]
@@ -175,7 +173,6 @@ xboxone_invert_yaw = False
 xboxone_invert_roll = False
 
 #mqtt
-broker_address="192.168.1.10" #todo:  option!
 client = mqtt.Client("P1") #create new instance
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -508,6 +505,8 @@ if __name__ != "__mp_main__":
 
             self.ui.pushButton_forward.clicked.connect(lambda: self.goForward(q, config))
             self.ui.pushButton_backward.clicked.connect(lambda: F.pathBackward(q, config))
+            self.ui.pushButton_next.clicked.connect(lambda: F.skipToNext(q, config))
+            self.ui.pushButton_prev.clicked.connect(lambda: F.skipToPrev(q, config))
 
 
 
@@ -1716,15 +1715,6 @@ def restart_tts(voice,rate,volume):
     ttsQ.start()
 
 
-
-
-#def start_joystick():
-#    global joystick_loop
-#    global joystick_value
-#    joystick_loop = True
-#    if not joystick_value.is_alive():
-#        joystick_value = Thread(target=joystick_thread, args=("Thread",))
-#        joystick_value.start()
 
 
 def stop_joystick():
