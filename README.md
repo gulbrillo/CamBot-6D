@@ -47,6 +47,8 @@ https://www.lordskippy.com/software/virtual-camera-robot
 ### Requirements:
 
 - **Star Citizen**: https://robertsspaceindustries.com/enlist?referral=STAR-F3GJ-MFBD
+- **opentrack**: https://github.com/opentrack/opentrack/releases
+  opentrack must be installed (it does not need to be running). Its installation registers `NPClient64.dll` in the Windows registry, which Star Citizen uses to initiate the FreeTrack handshake with CamBot 6D. Without it, Star Citizen will not detect CamBot 6D as a head tracker.
 - If you use TrackIR head tracking, terminate the TrackIR v5 Windows app before using CamBot 6D
 
 ### Optional:
@@ -69,13 +71,19 @@ https://github.com/gulbrillo/CamBot-6D/releases
 
 # Run
 
-Requires Python 3.10 or higher.
+Requires **Python 3.10** (PySide2 does not support Python 3.11+). Download from https://www.python.org/downloads/release/python-31011/
+
+Install dependencies:
+C:\Users\XXX\AppData\Local\Programs\Python\Python310\python.exe
+```
+python3.10.exe -m pip install "paho-mqtt<2" "numpy<2" PySide2 scipy pyttsx3 pywin32 "pygame<2" pynput XInput-Python
+```
 
 > python3.10.exe .\CamBot6D.py
 
 # Compile
 
-Spec file is provided. This will create a one file executable `CamBot6D.exe` in `./dist`. 
+Spec file is provided. This will create a one file executable `CamBot6D.exe` in `./dist`.
 > python3.10.exe -m PyInstaller CamBot6D.spec
 
 The spec file can be created with

@@ -11,11 +11,10 @@ import mmap
 from dataclasses import dataclass
 #from dataclasses import astuple
 import XInput
-import windows
 import win32event
 import os
 
-version = "v0.5.0"
+version = "v0.6.0"
 
 @dataclass
 class FT_SharedMem:
@@ -62,21 +61,72 @@ class Functions(MainWindow):
 
 
     def wait_for_hotkey_thread(self, threadname):
-        print('[ALT]+[Num+] hotkey registration')
-        ctypes.windll.user32.RegisterHotKey(None, 1, win32con.MOD_ALT, win32con.VK_ADD)
+        print('[ALT]+[Num+] global keyboard hook')
+
+        WH_KEYBOARD_LL    = 13
+        WM_KEYDOWN        = 0x0100
+        WM_SYSKEYDOWN     = 0x0104  # fired instead of WM_KEYDOWN when Alt is held
+        VK_MENU           = 0x12    # Alt key
+        WM_APP_FOREGROUND = 0x8001  # custom app message: bring CamBot to front
+
+        class KBDLLHOOKSTRUCT(ctypes.Structure):
+            _fields_ = [
+                ('vkCode',      ctypes.wintypes.DWORD),
+                ('scanCode',    ctypes.wintypes.DWORD),
+                ('flags',       ctypes.wintypes.DWORD),
+                ('time',        ctypes.wintypes.DWORD),
+                ('dwExtraInfo', ctypes.POINTER(ctypes.c_ulong)),
+            ]
+
+        # Fix 64-bit pointer truncation: ctypes defaults to c_int return type,
+        # but HHOOK / LRESULT are pointer-sized on 64-bit Windows.
+        user32   = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+        user32.SetWindowsHookExW.restype    = ctypes.c_void_p
+        user32.SetWindowsHookExW.argtypes   = [ctypes.c_int, ctypes.c_void_p,
+                                               ctypes.c_void_p, ctypes.c_uint]
+        user32.CallNextHookEx.restype       = ctypes.c_long
+        user32.CallNextHookEx.argtypes      = [ctypes.c_void_p, ctypes.c_int,
+                                               ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM]
+        user32.UnhookWindowsHookEx.argtypes = [ctypes.c_void_p]
+        user32.PostThreadMessageW.argtypes  = [ctypes.c_uint, ctypes.c_uint,
+                                               ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM]
+
+        thread_id = kernel32.GetCurrentThreadId()
+
+        HOOKPROC = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_int,
+                                      ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM)
+
+        def _proc(nCode, wParam, lParam):
+            if nCode >= 0 and wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
+                kb = ctypes.cast(lParam, ctypes.POINTER(KBDLLHOOKSTRUCT)).contents
+                if kb.vkCode == win32con.VK_ADD:
+                    alt = user32.GetAsyncKeyState(VK_MENU) & 0x8000
+                    if alt:
+                        # Post to our own message loop — SetForegroundWindow must not
+                        # be called from inside a hook callback (fails in-game).
+                        user32.PostThreadMessageW(thread_id, WM_APP_FOREGROUND, 0, 0)
+            return user32.CallNextHookEx(self._hook_id, nCode, wParam, lParam)
+
+        self._hook_cb = HOOKPROC(_proc)  # must stay alive — GC would break the hook
+        self._hook_id = user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._hook_cb, None, 0)
+
+        if not self._hook_id:
+            print(f'[ALT]+[Num+] hook FAILED (error {ctypes.GetLastError()})')
+            return
+
         try:
             msg = ctypes.wintypes.MSG()
-            while ctypes.windll.user32.GetMessageA(ctypes.byref(msg), None, 0, 0) != 0:
-                if msg.message == win32con.WM_HOTKEY:
-                    if self.window.windowState() == Qt.WindowMinimized:
-                        #for whatever reason this breaks with fullscreen (and minimized from fullscreen)
-                        self.window.showNormal()
-                        time.sleep(0.2)
-                    win32gui.SetForegroundWindow(win32gui.FindWindowEx(0,0,0, "CamBot 6D"))
-                ctypes.windll.user32.TranslateMessage(ctypes.byref(msg))
-                ctypes.windll.user32.DispatchMessageA(ctypes.byref(msg))
+            while user32.GetMessageA(ctypes.byref(msg), None, 0, 0) != 0:
+                if msg.message == WM_APP_FOREGROUND:
+                    self.showForeground()
+                user32.TranslateMessage(ctypes.byref(msg))
+                user32.DispatchMessageA(ctypes.byref(msg))
         except:
             print('hotkey FAILED')
+        finally:
+            user32.UnhookWindowsHookEx(self._hook_id)
+            self._hook_id = None
 
     def send_to_freetrack_thread(self, threadname):
 
@@ -105,7 +155,7 @@ class Functions(MainWindow):
             time_delta = current_time - previous_time
 
 
-            if self.robot == None:
+            if self.robot is None:
                 self.roboting = False
                 position = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
             else:
@@ -244,6 +294,7 @@ class Functions(MainWindow):
 
         self.sendToFreeTrack = True
         self.waitForHotkeyTid = None
+        self._hook_id = None
 
         ###
         # [ALT]+[Num+] hotkey registration
@@ -287,7 +338,6 @@ class Functions(MainWindow):
         print('stopping hotkey')
         try:
             ctypes.windll.user32.PostThreadMessageW(self.waitForHotkeyTid, WM_QUIT, 0, 0)
-            ctypes.windll.user32.UnregisterHotKey(None, 1)
         except Exception as error:
             print('Error stopping hotkey', error)
 
@@ -493,7 +543,7 @@ class Functions(MainWindow):
 
 
     def updateFreeTrack(self,x,y,z,yaw,pitch,roll):
-        if self.robot == None:
+        if self.robot is None:
             self.x = x
             self.y = y
             self.z = z
@@ -761,7 +811,14 @@ class Functions(MainWindow):
         position_from = [self.x, self.y, self.z, self.yaw, self.pitch, self.roll]
         position_to   = list(self.points[self.skip_index])
         path = np.concatenate((np.empty((0, 6), float), [position_from], [position_to]))
-        self.robot = self.calculateSpline(path, duration, easing, config)
+        result = self.calculateSpline(path, duration, easing, config)
+        if isinstance(result, list):
+            self.robot = result
+        else:
+            # Spline failed (e.g. already at waypoint) — snap directly to target
+            self.robot = None
+            self.x, self.y, self.z = position_to[0], position_to[1], position_to[2]
+            self.yaw, self.pitch, self.roll = position_to[3], position_to[4], position_to[5]
         queue.put(f'waypoint {self.skip_index + 1}')
 
     def saveWaypoint(self, queue):

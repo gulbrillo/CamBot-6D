@@ -656,7 +656,7 @@ if __name__ != "__mp_main__":
             roll_snap = roll
 
             while controllerTest:
-                print(x,y,z)
+                #print(x,y,z,yaw,pitch,roll)
                 time.sleep(0.02) #50 fps (ish)
                 x_test = self.ui.tableWidget.item(0, 0)
                 x_test.setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
@@ -1354,6 +1354,23 @@ if __name__ != "__mp_main__":
             global gamepad
 
             xboxone_sensitivity = 1
+            _xbox_last_id = -1
+            _xbox_debug_counter = 0
+
+            # Xbox button indices for pygame.joystick.Joystick + SDL2.
+            # pygame.CONTROLLER_BUTTON_* values are for pygame.controller.Controller
+            # and do NOT match (e.g. CONTROLLER_BUTTON_LEFTSHOULDER == 9, not 4).
+            XBOX_BTN_A    = 0
+            XBOX_BTN_B    = 1
+            XBOX_BTN_X    = 2
+            XBOX_BTN_Y    = 3
+            XBOX_BTN_LB   = 4   # Left Bumper
+            XBOX_BTN_RB   = 5   # Right Bumper
+            XBOX_BTN_VIEW = 6   # View / Back
+            XBOX_BTN_MENU = 7   # Menu / Start
+            XBOX_BTN_LS   = 8   # Left Stick click
+            XBOX_BTN_RS   = 9   # Right Stick click
+            XBOX_BTN_XBOX = 11  # Xbox / Guide button
 
             while joystick_loop:
 
@@ -1383,148 +1400,134 @@ if __name__ != "__mp_main__":
                     except pygame.error as message:
                         print(message)
 
-
                     if controller == 'xboxone':
-
-                        #print('FreeTrack', TFreeTrackData.X, TFreeTrackData.Y, TFreeTrackData.Z)
-
                         pygame.event.pump()
 
-                        if gamepad != None:
-
+                        if gamepad is not None:
+                            controller_id = -1
                             try:
                                 for c in range(pygame.joystick.get_count()):
-                                    if gamepad == pygame.joystick.Joystick(c).get_guid():
+                                    temp_joy = pygame.joystick.Joystick(c)
+                                    # Ensure it's initialized to get GUID
+                                    if not temp_joy.get_init(): temp_joy.init()
+
+                                    if gamepad == temp_joy.get_guid():
                                         controller_id = c
                                         break
                             except pygame.error as message:
-                                print(message)
+                                print(f"Discovery error: {message}")
 
                             if controller_id >= 0:
+                                joy = pygame.joystick.Joystick(controller_id)
+                                if not joy.get_init(): joy.init()
 
+                                if controller_id != _xbox_last_id:
+                                    _xbox_last_id = controller_id
+                                    print(f"Using controller: {joy.get_name()}  ({joy.get_numaxes()} axes, {joy.get_numbuttons()} buttons)")
 
-                                invert_roll = 1
-                                if xboxone_invert_roll:
-                                    invert_roll = -1
-                                invert_yaw = 1
-                                if xboxone_invert_yaw:
-                                    invert_yaw = -1
-                                invert_pitch = -1
-                                if not xboxone_invert_pitch:
-                                    invert_pitch = 1
+                                invert_roll = -1 if xboxone_invert_roll else 1
+                                invert_yaw = -1 if xboxone_invert_yaw else 1
+                                invert_pitch = -1 if not xboxone_invert_pitch else 1
 
                                 try:
+                                    # SDL2 axis reads — indices match pygame.CONTROLLER_AXIS_* constants
+                                    left_x  = joy.get_axis(pygame.CONTROLLER_AXIS_LEFTX)        # Left Stick X
+                                    left_y  = joy.get_axis(pygame.CONTROLLER_AXIS_LEFTY)        # Left Stick Y
+                                    right_x = joy.get_axis(pygame.CONTROLLER_AXIS_RIGHTX)       # Right Stick X
+                                    right_y = joy.get_axis(pygame.CONTROLLER_AXIS_RIGHTY)       # Right Stick Y
+                                    trig_l  = joy.get_axis(pygame.CONTROLLER_AXIS_TRIGGERLEFT)  # Left Trigger  (-1 idle → +1 full)
+                                    trig_r  = joy.get_axis(pygame.CONTROLLER_AXIS_TRIGGERRIGHT) # Right Trigger (-1 idle → +1 full)
 
-                                    stick_x = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(0), .05)
-                                    stick_y0 = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(4), .05)
-                                    stick_y1 = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(5), .05)
-                                    stick_z = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(1), .05)
-                                    stick_pitch = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(3), .05)
-                                    stick_yaw = self.Deadzone(pygame.joystick.Joystick(controller_id).get_axis(2), .05)
+                                    # Live axis verification (throttled — prints ~1/sec at 200 Hz)
+                                    _xbox_debug_counter += 1
+                                    if _xbox_debug_counter % 10 == 0:
+                                        print(f"[Xbox axes] LS=({left_x:+.4f},{left_y:+.4f})  RS=({right_x:+.4f},{right_y:+.4f})  LT={trig_l:+.4f}  RT={trig_r:+.4f}")
 
+                                    stick_x     = self.Deadzone(left_x,  .05)  # Left Stick X  → camera X
+                                    stick_z     = self.Deadzone(left_y,  .05)  # Left Stick Y  → camera Z
+                                    stick_yaw   = self.Deadzone(right_x, .05)  # Right Stick X → yaw
+                                    stick_pitch = self.Deadzone(right_y, .05)  # Right Stick Y → pitch
 
-                                    if xboxone_motion == 0: #absolute coordinates
-                                        x = increment(x, (- stick_x)  * xboxone_sensitivity)
-                                        z = increment(z, (stick_z)  * xboxone_sensitivity)
-                                        y = increment(y, (stick_y1+1 - (stick_y0+1))/2  * xboxone_sensitivity)
+                                    # Triggers: SDL2 -1.0 idle → +1.0 full; normalize to 0–1
+                                    stick_y0 = (trig_l + 1.0) / 2.0  # Left Trigger  → camera Y down
+                                    stick_y1 = (trig_r + 1.0) / 2.0  # Right Trigger → camera Y up
+
+                                    if xboxone_motion == 0:  # absolute coordinates
+                                        x = increment(x, (- stick_x) * xboxone_sensitivity)
+                                        z = increment(z, (stick_z) * xboxone_sensitivity)
+                                        # Simplified Y calculation (Right trigger up, Left trigger down)
+                                        y = increment(y, (stick_y1 - stick_y0) * xboxone_sensitivity)
 
                                         yaw = increment(yaw, (- stick_yaw * invert_yaw) / 200 * xboxone_sensitivity)
-                                        pitch = increment(pitch, (stick_pitch * invert_pitch) / 200 * xboxone_sensitivity)
-                                        if pygame.joystick.Joystick(controller_id).get_button(4):
+                                        pitch = increment(pitch,
+                                                          (stick_pitch * invert_pitch) / 200 * xboxone_sensitivity)
+
+                                        if joy.get_button(XBOX_BTN_LB):
                                             roll = roll + 0.0025 * xboxone_sensitivity * invert_roll
-                                        if pygame.joystick.Joystick(controller_id).get_button(5):
+                                        if joy.get_button(XBOX_BTN_RB):
                                             roll = roll - 0.0025 * xboxone_sensitivity * invert_roll
 
-                                    else: #relative coordinates
-                                        x = increment(x, (- math.sin(yaw) * stick_z - math.cos(yaw) * stick_x) * xboxone_sensitivity)
-                                        z = increment(z, (- math.sin(yaw) * stick_x + math.cos(yaw) * stick_z) * xboxone_sensitivity)
-                                        y = increment(y, (stick_y1+1 - (stick_y0+1))/2 * xboxone_sensitivity)
+                                    else:  # relative coordinates
+                                        x = increment(x, (- math.sin(yaw) * stick_z - math.cos(
+                                            yaw) * stick_x) * xboxone_sensitivity)
+                                        z = increment(z, (- math.sin(yaw) * stick_x + math.cos(
+                                            yaw) * stick_z) * xboxone_sensitivity)
+                                        y = increment(y, (stick_y1 - stick_y0) * xboxone_sensitivity)
 
                                         yaw = increment(yaw, (- stick_yaw * invert_yaw) / 200 * xboxone_sensitivity)
-                                        pitch = increment(pitch, (- math.sin(roll) * stick_yaw * invert_yaw + math.cos(roll) * stick_pitch * invert_pitch) / 200 * xboxone_sensitivity)
+                                        pitch = increment(pitch, (- math.sin(roll) * stick_yaw * invert_yaw + math.cos(
+                                            roll) * stick_pitch * invert_pitch) / 200 * xboxone_sensitivity)
+                                        roll = increment(roll, (math.sin(
+                                            pitch) * stick_yaw * invert_yaw) / 200 * xboxone_sensitivity)
 
-                                        #if pitch is down, roll should be yaw
-                                        roll = increment(roll, ( math.sin(pitch) * stick_yaw * invert_yaw) / 200 * xboxone_sensitivity)
-                                        if pygame.joystick.Joystick(controller_id).get_button(4):
+                                        if joy.get_button(XBOX_BTN_LB):
                                             roll = (roll + math.cos(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
                                             yaw = (yaw + math.sin(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
-                                        if pygame.joystick.Joystick(controller_id).get_button(5):
+                                        if joy.get_button(XBOX_BTN_RB):
                                             roll = (roll - math.cos(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
                                             yaw = (yaw - math.sin(pitch) * 0.0025 * xboxone_sensitivity * invert_roll)
 
-                                    #print('yaw', yaw, 'pitch', pitch, 'roll', roll)
-
-                                    #print('yaw',yaw,'x',x,'z',z)
-
-                                    #wrap yaw/pitch/roll motions (should be an option)
+                                    # Wrap rotations
                                     if xboxone_wrap_rotation:
-                                        yaw = (yaw+math.pi)%(2*math.pi)-math.pi
-                                        pitch = (pitch+math.pi)%(2*math.pi)-math.pi
-                                        roll = (roll+math.pi)%(2*math.pi)-math.pi
+                                        yaw = (yaw + math.pi) % (2 * math.pi) - math.pi
+                                        pitch = (pitch + math.pi) % (2 * math.pi) - math.pi
+                                        roll = (roll + math.pi) % (2 * math.pi) - math.pi
 
-
-                                    if abs(x) > 500 or abs(y) > 500 or abs(z) > 500 or abs(yaw) > math.pi or abs(pitch) > math.pi or abs(roll) > math.pi:
-                                        pygame.joystick.Joystick(controller_id).rumble(0, .5, 2)
-                                        if abs(x) > 500:
-                                            x = np.sign(x) * 500
-                                        if abs(y) > 500:
-                                            y = np.sign(y) * 500
-                                        if abs(z) > 500:
-                                            z = np.sign(z) * 500
-                                        if abs(yaw) > math.pi:
-                                            yaw = np.sign(yaw) * math.pi
-                                        if abs(pitch) > math.pi:
-                                            pitch = np.sign(pitch) * math.pi
-                                        if abs(roll) > math.pi:
-                                            roll = np.sign(roll) * math.pi
+                                    # Limits and Rumble (Pygame 2 specific)
+                                    if any(abs(v) > 500 for v in [x, y, z]) or any(
+                                            abs(v) > math.pi for v in [yaw, pitch, roll]):
+                                        # rumble(low_freq, high_freq, duration_ms)
+                                        joy.rumble(0, 0.5, 500)
+                                        x = np.clip(x, -500, 500)
+                                        y = np.clip(y, -500, 500)
+                                        z = np.clip(z, -500, 500)
+                                        yaw = np.clip(yaw, -math.pi, math.pi)
+                                        pitch = np.clip(pitch, -math.pi, math.pi)
+                                        roll = np.clip(roll, -math.pi, math.pi)
                                     else:
-                                        pygame.joystick.Joystick(controller_id).stop_rumble()
+                                        joy.stop_rumble()
 
-
+                                    # Event Handling
                                     for event in pygame.event.get():
                                         if event.type == pygame.JOYHATMOTION:
-                                            if pygame.joystick.Joystick(controller_id).get_hat(0)[1] == 1:
-                                                print('sensitivity up')
-                                                q.put('sensitivity up')
-                                                if not xboxone_sensitivity * math.sqrt(2) >= 16:
-                                                    xboxone_sensitivity = xboxone_sensitivity * math.sqrt(2)
-                                            elif pygame.joystick.Joystick(controller_id).get_hat(0)[1] == -1:
-                                                print('sensitivity down')
-                                                q.put('sensitivity down')
-                                                if not xboxone_sensitivity / math.sqrt(2) <= 0.0625:
-                                                    xboxone_sensitivity = xboxone_sensitivity / math.sqrt(2)
+                                            # D-Pad sensitivity control
+                                            hat_x, hat_y = event.value
+                                            if hat_y == 1:
+                                                xboxone_sensitivity = min(16, xboxone_sensitivity * math.sqrt(2))
+                                            elif hat_y == -1:
+                                                xboxone_sensitivity = max(0.0625, xboxone_sensitivity / math.sqrt(2))
+
                                         if event.type == pygame.JOYBUTTONDOWN:
-                                            if pygame.joystick.Joystick(controller_id).get_button(0):
-                                                self.ui.pushButton_add_waypoint.click()
-                                                print('A')
-                                            if pygame.joystick.Joystick(controller_id).get_button(1):
-                                                self.ui.pushButton_delete_all.click()
-                                                print('B')
-                                            if pygame.joystick.Joystick(controller_id).get_button(2):
-                                                self.F.goHome(q, config)
-                                                print('X')
-                                            if pygame.joystick.Joystick(controller_id).get_button(3):
-                                                print('Y')
-                                            if pygame.joystick.Joystick(controller_id).get_button(6):
-                                                self.goBackward(q, config)
-                                                print('window')
-                                            if pygame.joystick.Joystick(controller_id).get_button(7):
-                                                self.goForward(q, config)
-                                                print('settings')
-                                            if pygame.joystick.Joystick(controller_id).get_button(8):
-                                                print('left down')
-                                            if pygame.joystick.Joystick(controller_id).get_button(9):
-                                                print('right down')
-                                            if pygame.joystick.Joystick(controller_id).get_button(10):
-                                                print('xbox')
-                                            if pygame.joystick.Joystick(controller_id).get_button(11):
-                                                self.showForeground()
-                                                print('share')
+                                            btn = event.button
+                                            if btn == XBOX_BTN_A:    self.ui.pushButton_add_waypoint.click()
+                                            if btn == XBOX_BTN_B:    self.ui.pushButton_delete_all.click()
+                                            if btn == XBOX_BTN_X:    self.F.goHome(q, config)
+                                            if btn == XBOX_BTN_VIEW: self.goBackward(q, config)
+                                            if btn == XBOX_BTN_MENU: self.goForward(q, config)
+                                            if btn == XBOX_BTN_XBOX: self.showForeground()
 
                                 except pygame.error as message:
-                                    print("Cannot read gamepad ID " + str(controller_id))
-                                    print(message)
-                                    #raise SystemExit(message)
+                                    print(f"Read error on ID {controller_id}: {message}")
 
                         #print(x,y,z,yaw,pitch,roll)
 
