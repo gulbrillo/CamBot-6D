@@ -498,11 +498,30 @@ class Functions(MainWindow):
                 self.roll += (keys[pygame.K_q] - keys[pygame.K_e]) * self.config_keyboard_sensitivity_r * invert_roll * self.speed_modifier
 
             else: #relative coordinates
-                self.x += ( math.sin(self.yaw) * (keys[pygame.K_w] - keys[pygame.K_s]) + math.cos(self.yaw) * (keys[pygame.K_a] - keys[pygame.K_d]) ) * self.config_keyboard_sensitivity_t * self.speed_modifier
-                self.z += ( math.sin(self.yaw) * (keys[pygame.K_a] - keys[pygame.K_d]) - math.cos(self.yaw) * (keys[pygame.K_w] - keys[pygame.K_s]) ) * self.config_keyboard_sensitivity_t * self.speed_modifier
-                self.y += (keys[pygame.K_SPACE] - keys[pygame.K_LCTRL]) * self.config_keyboard_sensitivity_t * self.speed_modifier
-                self.roll += math.cos(self.pitch) * (keys[pygame.K_q] - keys[pygame.K_e]) * self.config_keyboard_sensitivity_r * invert_roll * self.speed_modifier
-                self.yaw -= math.sin(self.pitch) * (keys[pygame.K_q] - keys[pygame.K_e]) * self.config_keyboard_sensitivity_r * invert_roll * self.speed_modifier
+                fwd   = keys[pygame.K_w] - keys[pygame.K_s]
+                right = keys[pygame.K_a] - keys[pygame.K_d]
+                up    = keys[pygame.K_SPACE] - keys[pygame.K_LCTRL]
+                yv, pv, rv = self.yaw, -self.pitch, self.roll  # negate pitch: positive pitch = look down in FreeTrack convention
+                # Full 3D camera basis vectors in world space (yaw → pitch → roll).
+                # right_world, up_world, fwd_world are the columns of R = Ry * Rx * Rz.
+                right_x =  math.cos(yv)*math.cos(rv) + math.sin(pv)*math.sin(yv)*math.sin(rv)
+                right_y = -math.cos(pv)*math.sin(rv)
+                right_z =  math.sin(yv)*math.cos(rv) - math.sin(pv)*math.cos(yv)*math.sin(rv)
+
+                fwd_x   =  math.sin(yv)*math.cos(pv)
+                fwd_y   =  math.sin(pv)
+                fwd_z   = -math.cos(yv)*math.cos(pv)
+
+                up_x    = -math.sin(yv)*math.sin(pv)*math.cos(rv) + math.cos(yv)*math.sin(rv)
+                up_y    =  math.cos(pv)*math.cos(rv)
+                up_z    =  math.cos(yv)*math.sin(pv)*math.cos(rv) + math.sin(yv)*math.sin(rv)
+
+                s = self.config_keyboard_sensitivity_t * self.speed_modifier
+                self.x += (right_x * right + fwd_x * fwd + up_x * up) * s
+                self.y += (right_y * right + fwd_y * fwd + up_y * up) * s
+                self.z += (right_z * right + fwd_z * fwd + up_z * up) * s
+                self.roll += math.cos(pv) * (keys[pygame.K_q] - keys[pygame.K_e]) * self.config_keyboard_sensitivity_r * invert_roll * self.speed_modifier
+                self.yaw -= math.sin(pv) * (keys[pygame.K_q] - keys[pygame.K_e]) * self.config_keyboard_sensitivity_r * invert_roll * self.speed_modifier
 
 
             #wrap yaw/pitch/roll motions (should be an option)

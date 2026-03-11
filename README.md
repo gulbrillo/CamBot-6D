@@ -76,7 +76,7 @@ Requires **Python 3.10** (PySide2 does not support Python 3.11+). Download from 
 Install dependencies:
 C:\Users\XXX\AppData\Local\Programs\Python\Python310\python.exe
 ```
-python3.10.exe -m pip install "paho-mqtt<2" "numpy<2" PySide2 scipy pyttsx3 pywin32 "pygame<2" pynput XInput-Python
+python3.10.exe -m pip install "paho-mqtt<2" "numpy<2" PySide2 scipy pyttsx3 pywin32 pygame pynput XInput-Python pyinstaller
 ```
 
 > python3.10.exe .\CamBot6D.py
