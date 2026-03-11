@@ -2653,6 +2653,42 @@ class Ui_MainWindow(object):
 
 ##
 
+        self.opentrackPortEdit = QLineEdit(self.frame_title_wid_S1)
+        self.opentrackPortEdit.setObjectName(u"opentrackPortEdit")
+        self.opentrackPortEdit.setMinimumSize(QSize(0, 30))
+        self.opentrackPortEdit.setStyleSheet(u"QLineEdit {\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding-left: 5px;\n"
+"}\n"
+"QLineEdit:hover {\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QLineEdit:focus {\n"
+"	border: 2px solid rgb(91, 101, 124);\n"
+"}")
+
+        self.gridLayout_S2.addWidget(self.opentrackPortEdit, 5, 0, 1, 1)
+
+        self.dualPCPasswordEdit = QLineEdit(self.frame_title_wid_S1)
+        self.dualPCPasswordEdit.setObjectName(u"dualPCPasswordEdit")
+        self.dualPCPasswordEdit.setMinimumSize(QSize(0, 30))
+        self.dualPCPasswordEdit.setEchoMode(QLineEdit.Password)
+        self.dualPCPasswordEdit.setStyleSheet(u"QLineEdit {\n"
+"	background-color: rgb(27, 29, 35);\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding-left: 5px;\n"
+"}\n"
+"QLineEdit:hover {\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"QLineEdit:focus {\n"
+"	border: 2px solid rgb(91, 101, 124);\n"
+"}")
+
+        self.gridLayout_S2.addWidget(self.dualPCPasswordEdit, 6, 0, 1, 1)
 
 
         ##
@@ -3241,7 +3277,8 @@ class Ui_MainWindow(object):
         self.label_skipease_info.setText(QCoreApplication.translate("MainWindow", u"Easing", None))
 
         self.remoteIPEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 127.0.0.1", None))
-        #self.opentrackPortEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 4242", None))
+        self.opentrackPortEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"default: 4343", None))
+        self.dualPCPasswordEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"shared password", None))
 
         self.MQTTTestButton.setText(QCoreApplication.translate("MainWindow", u" CONNECT TO BROKER", None))
         self.controllerTestButton.setText(QCoreApplication.translate("MainWindow", u" TEST", None))

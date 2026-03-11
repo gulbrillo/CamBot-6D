@@ -29,7 +29,7 @@ if __name__ != "__mp_main__":
     import platform
     from scipy import interpolate
     from PySide2 import QtCore, QtGui, QtWidgets
-    from PySide2.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint, QRect, QSize, QTime, QUrl, Qt, QEvent)
+    from PySide2.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint, QRect, QSize, QTime, QUrl, Qt, QEvent, Slot, Signal)
     from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient)
     from PySide2.QtWidgets import *
     import time
@@ -46,6 +46,11 @@ if __name__ != "__mp_main__":
     import struct
 
     import math
+    import socket as _socket
+    import select as _select
+    import secrets as _secrets
+    import subprocess
+    import cambot_protocol
 
     try:
         import pyi_splash
@@ -88,6 +93,12 @@ mqtt_user = ''
 mqtt_pass = ''
 opentrack_ip = ''
 opentrack_port = ''
+dualpc_role = 0          # 0=disabled, 1=Gaming PC, 2=Controller PC
+dualpc_port = 4343
+dualpc_derived_key = b''
+dualpc_key_salt = b''
+dualpc_running = False
+dualpc_seq = 0
 #
 
 path_time = 3.0
@@ -225,7 +236,27 @@ def increment(old, new):
     return old + new
 
 if __name__ != "__mp_main__":
+    def _check_firewall_block():
+        """Return True if a Windows Firewall inbound Block rule targets python or CamBot."""
+        try:
+            ps = (
+                '(Get-NetFirewallRule -Direction Inbound -Action Block -Enabled True |'
+                ' Get-NetFirewallApplicationFilter |'
+                ' Where-Object { $_.Program -like "*python*" -or $_.Program -like "*CamBot*" }).Count'
+            )
+            result = subprocess.run(
+                ['powershell', '-NoProfile', '-NonInteractive', '-Command', ps],
+                capture_output=True, text=True, timeout=8)
+            return int(result.stdout.strip() or '0') > 0
+        except Exception:
+            return False
+
     class MainWindow(QMainWindow):
+
+        # Signals for thread-safe cross-thread calls (from UDP threads → Qt main thread)
+        dualpc_status_signal = Signal(str, str, str)   # text, color, tooltip
+        dualpc_bind_error_signal = Signal()
+        dualpc_firewall_warning_signal = Signal()
 
         def __init__(self):
 
@@ -475,8 +506,24 @@ if __name__ != "__mp_main__":
             self.ui.remoteIPEdit.setText(QCoreApplication.translate("MainWindow", str(opentrack_ip), None))
             self.ui.remoteIPEdit.textChanged.connect(self.opentrack_ip_changed)
 
-            #self.ui.opentrackPortEdit.setText(QCoreApplication.translate("MainWindow", str(opentrack_port), None))
-            #self.ui.opentrackPortEdit.textChanged.connect(self.opentrack_port_changed)
+            self.ui.opentrackPortEdit.setText(QCoreApplication.translate("MainWindow", str(opentrack_port), None))
+            self.ui.opentrackPortEdit.textChanged.connect(self.opentrack_port_changed)
+
+            self.ui.dualPCPasswordEdit.editingFinished.connect(self.on_dualpc_password_set)
+
+            self.ui.remoteSelection.setCurrentIndex(dualpc_role)
+            self.ui.remoteSelection.currentIndexChanged.connect(self.on_remoteSelection_changed)
+
+            # Wire dual-PC signals (thread-safe cross-thread calls)
+            self.dualpc_status_signal.connect(self._dualpc_update_status)
+            self.dualpc_bind_error_signal.connect(self._dualpc_host_bind_error)
+            self.dualpc_firewall_warning_signal.connect(self._show_firewall_warning)
+
+            # Auto-start dual-PC mode if configured
+            if dualpc_role == 1 and dualpc_derived_key:
+                self.start_dualpc_host()
+            elif dualpc_role == 2 and dualpc_derived_key:
+                self.start_dualpc_controller()
 
             hostname = socket.gethostname()
             local_ip = socket.gethostbyname(hostname)
@@ -1335,6 +1382,254 @@ if __name__ != "__mp_main__":
             self.ui.MQTTTestButton.setEnabled(True)
 
 
+        # ------------------------------------------------------------------ #
+        #  Dual-PC UDP streaming                                              #
+        # ------------------------------------------------------------------ #
+
+        def set_dualpc_status(self, text, color=''):
+            """Update label_version with dual-PC connection status."""
+            version_link = u'<a style="text-decoration: none; color: #62676f;" href="https://github.com/thelordskippy/CamBot6D/releases">{}</a>'.format(version)
+            if text:
+                span = u'<span style="color: {};">{}</span>'.format(color, text)
+                self.ui.label_version.setText(version_link + u' \u2013 ' + span)
+            else:
+                self.ui.label_version.setText(
+                    u'<span style="text-decoration: none; color: #62676f;">disconnected</span>')
+
+        def on_remoteSelection_changed(self, i):
+            global dualpc_role
+            dualpc_role = i
+            config.set('dualpc', 'role', str(i))
+            self.write_config()
+            self.stop_dualpc()
+            if i == 1 and dualpc_derived_key:
+                self.start_dualpc_host()
+            elif i == 2 and dualpc_derived_key:
+                self.start_dualpc_controller()
+            elif i == 0:
+                # Restore game connection status label
+                self.ui.label_version.setText(
+                    u'<a style="text-decoration: none; color: #62676f;"'
+                    u' href="https://github.com/thelordskippy/CamBot6D/releases">'
+                    + version +
+                    u'</a> \u2013 <span style="text-decoration: none;'
+                    u' color: #62676f;">disconnected</span>')
+                self.ui.label_version.setToolTip(u'please launch Star Citizen')
+
+        def on_dualpc_password_set(self):
+            global dualpc_derived_key, dualpc_key_salt
+            password = self.ui.dualPCPasswordEdit.text().strip()
+            if not password:
+                return
+            salt = _secrets.token_bytes(16)
+            key  = cambot_protocol.derive_key(password, salt)
+            dualpc_key_salt    = salt
+            dualpc_derived_key = key
+            config.set('dualpc', 'key_salt',    salt.hex())
+            config.set('dualpc', 'key_derived',  key.hex())
+            self.write_config()
+            self.ui.dualPCPasswordEdit.clear()
+            # Restart streaming with new key if already in a role
+            if dualpc_role > 0:
+                self.on_remoteSelection_changed(dualpc_role)
+
+        def start_dualpc_host(self):
+            """Start the Gaming PC UDP receiver thread."""
+            global dualpc_running
+            self.stop_dualpc()
+            dualpc_running = True
+            t = Thread(target=self.dualpc_receiver_thread, daemon=True)
+            t.start()
+            port = int(opentrack_port) if opentrack_port else dualpc_port
+            self.set_dualpc_status('waiting for Remote PC', '#62676f')
+            self.ui.label_version.setToolTip('listening on port {}'.format(port))
+
+        def start_dualpc_controller(self):
+            """Start the Controller PC UDP sender thread."""
+            global dualpc_running
+            self.stop_dualpc()
+            dualpc_running = True
+            t = Thread(target=self.dualpc_sender_thread, daemon=True)
+            t.start()
+            self.set_dualpc_status('Gaming PC disconnected', '#62676f')
+            self.ui.label_version.setToolTip('enter Gaming PC IP and shared password')
+
+        def stop_dualpc(self):
+            global dualpc_running
+            dualpc_running = False
+
+        def dualpc_receiver_thread(self):
+            """Gaming PC: receive axes + buttons from Controller PC, forward to FreeTrack."""
+            port = int(opentrack_port) if opentrack_port else dualpc_port
+            last_seq_map   = {}
+            pending_hello  = {}   # sender_ip -> (nonce, timestamp)
+            authenticated  = set()
+
+            sock = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+            sock.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+            sock.settimeout(1.0)
+            try:
+                sock.bind(('', port))
+            except OSError as e:
+                print('DualPC host bind error:', e)
+                self.dualpc_bind_error_signal.emit()
+                return
+
+            print('DualPC host listening on UDP port', port)
+
+            # Check for Windows Firewall block rule (runs once per session start)
+            if _check_firewall_block():
+                self.dualpc_firewall_warning_signal.emit()
+
+            while dualpc_running:
+                try:
+                    data, addr = sock.recvfrom(512)
+                except _socket.timeout:
+                    continue
+                except OSError:
+                    break
+
+                sender_ip = addr[0]
+
+                if len(data) < 2:
+                    continue
+
+                msg_type = data[1]
+
+                # --- Handshake: HELLO_ACK from controller ---
+                if msg_type == cambot_protocol.MSG_HELLO_ACK:
+                    pdata = pending_hello.get(sender_ip)
+                    if pdata:
+                        nonce, _ = pdata
+                        if cambot_protocol.verify_hello_ack(data, nonce, dualpc_derived_key):
+                            # Authenticated: clear seq map so restarted controller is accepted
+                            last_seq_map.pop(sender_ip, None)
+                            authenticated.add(sender_ip)
+                            pending_hello.pop(sender_ip, None)
+                            print('DualPC: authenticated', sender_ip)
+                            self.dualpc_status_signal.emit(
+                                'Remote PC connected', '#4CAF50',
+                                'receiving from {}'.format(sender_ip))
+                    continue
+
+                # --- Data packet: initiate/retry handshake if not authenticated ---
+                if sender_ip not in authenticated:
+                    pdata = pending_hello.get(sender_ip)
+                    if pdata is None or (time.monotonic() - pdata[1]) > 5.0:
+                        nonce = _secrets.token_bytes(16)
+                        pending_hello[sender_ip] = (nonce, time.monotonic())
+                        hello_pkt = cambot_protocol.pack_hello(nonce)
+                        try:
+                            sock.sendto(hello_pkt, addr)
+                        except OSError:
+                            pass
+                    continue
+
+                # --- Verified data ---
+                result = cambot_protocol.verify_and_unpack(
+                    data, dualpc_derived_key, last_seq_map, sender_ip)
+                if result is None:
+                    continue
+
+                if result['type'] == cambot_protocol.MSG_AXES:
+                    self.F.updateFreeTrack(
+                        result['x'], result['y'], result['z'],
+                        result['yaw'], result['pitch'], result['roll'])
+
+            sock.close()
+            print('DualPC host stopped')
+
+        def dualpc_sender_thread(self):
+            """Controller PC: send axes + buttons to Gaming PC at ~100 Hz."""
+            global dualpc_seq
+            target_ip   = opentrack_ip if opentrack_ip else '127.0.0.1'
+            target_port = int(opentrack_port) if opentrack_port else dualpc_port
+
+            sock = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+            sock.settimeout(0)   # non-blocking for recv (MSG_HELLO from host)
+
+            interval = 1.0 / 100  # 100 Hz
+            next_send = time.monotonic()
+
+            print('DualPC controller → {}:{}'.format(target_ip, target_port))
+
+            while dualpc_running:
+                now = time.monotonic()
+
+                # Check for incoming MSG_HELLO from Gaming PC
+                readable, _, _ = _select.select([sock], [], [], 0)
+                if readable:
+                    try:
+                        data, _ = sock.recvfrom(512)
+                        if len(data) >= 2 and data[1] == cambot_protocol.MSG_HELLO:
+                            result = cambot_protocol.verify_and_unpack(
+                                data, dualpc_derived_key, {}, '0.0.0.0')
+                            if result and result['type'] == cambot_protocol.MSG_HELLO:
+                                ack = cambot_protocol.pack_hello_ack(
+                                    result['nonce'], dualpc_derived_key)
+                                try:
+                                    sock.sendto(ack, (target_ip, target_port))
+                                    self.dualpc_status_signal.emit(
+                                        'Gaming PC connected', '#4CAF50',
+                                        'streaming to {}'.format(target_ip))
+                                except OSError:
+                                    pass
+                    except (BlockingIOError, OSError):
+                        pass
+
+                # Rate-limit to 100 Hz
+                if now < next_send:
+                    time.sleep(max(0, next_send - now))
+                    continue
+                next_send += interval
+
+                # Send axes
+                dualpc_seq += 1
+                try:
+                    pkt = cambot_protocol.pack_axes(
+                        dualpc_seq, x, y, z, yaw, pitch, roll,
+                        dualpc_derived_key)
+                    sock.sendto(pkt, (target_ip, target_port))
+                except OSError as e:
+                    print('DualPC send error:', e)
+
+
+            sock.close()
+            print('DualPC controller stopped')
+
+        @Slot(str, str, str)
+        def _dualpc_update_status(self, text, color, tooltip):
+            self.set_dualpc_status(text, color)
+            if tooltip:
+                self.ui.label_version.setToolTip(tooltip)
+
+        @Slot()
+        def _dualpc_host_bind_error(self):
+            self.set_dualpc_status('port bind error', '#E57373')
+
+        @Slot()
+        def _show_firewall_warning(self):
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Windows Firewall is blocking CamBot 6D")
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText(
+                "Windows Firewall has a <b>Block</b> rule for this application, "
+                "which will prevent the Remote Control PC from connecting.")
+            msg.setInformativeText(
+                "To fix:\n"
+                "1. Open <b>Windows Defender Firewall with Advanced Security</b>\n"
+                "2. Click <b>Inbound Rules</b> in the left pane\n"
+                "3. Find the rule for <i>python.exe</i> or <i>CamBot6D.exe</i> "
+                "with a red \u2715 (Block) icon\n"
+                "4. Right-click it and choose <b>Delete</b> (or change Action to Allow)\n"
+                "5. Toggle the Gaming PC mode off and on again in CamBot 6D")
+            open_btn = msg.addButton("Open Firewall Settings", QMessageBox.ActionRole)
+            msg.addButton("Dismiss", QMessageBox.RejectRole)
+            msg.exec_()
+            if msg.clickedButton() == open_btn:
+                subprocess.Popen(['mmc', 'wf.msc'])
+
+        # ------------------------------------------------------------------ #
 
         def joystick_thread(self):
 
@@ -1666,6 +1961,7 @@ if __name__ != "__mp_main__":
             self.stop_controller_test()
             stop_joystick()
             self.stop_mqtt()
+            self.stop_dualpc()
             stop_tts()
             self.F.stop_freetrack()
             self.F.stop_hotkey()
@@ -1821,6 +2117,16 @@ if __name__ == "__main__":
         opentrack_ip = config.get('dualpc', 'ip')
     if config.has_option('dualpc', 'port'):
         opentrack_port = config.get('dualpc', 'port')
+    if config.has_option('dualpc', 'role'):
+        dualpc_role = config.getint('dualpc', 'role')
+    if config.has_option('dualpc', 'key_salt'):
+        _s = config.get('dualpc', 'key_salt')
+        if _s:
+            dualpc_key_salt = bytes.fromhex(_s)
+    if config.has_option('dualpc', 'key_derived'):
+        _d = config.get('dualpc', 'key_derived')
+        if _d:
+            dualpc_derived_key = bytes.fromhex(_d)
 
     if not config.has_section('mqtt'):
         config.add_section('mqtt')
